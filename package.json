@@ -1,0 +1,19 @@
+{
+  "name": "gigBot",
+  "version": "0.0.0",
+  "description": "GigBot, a bot for gigs",
+  "main": "app.js",
+  "repository": {
+    "type": "git",
+    "url": "git://[...].git"
+  },
+  "scripts": {
+    "start": "node ./app.js"
+  },
+  "author": "Peerby <dev.peerby.com>",
+  "dependencies": {
+    "async": "^2.0.0-rc.3",
+    "google-spreadsheet": "^2.0.1"
+  },
+  "devDependencies": {}
+}
