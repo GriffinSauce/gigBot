@@ -2,3 +2,5 @@
 node_modules/
 
 google-generated-creds.json
+
+config.json

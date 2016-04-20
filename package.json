@@ -13,7 +13,13 @@
   "author": "Peerby <dev.peerby.com>",
   "dependencies": {
     "async": "^2.0.0-rc.3",
-    "google-spreadsheet": "^2.0.1"
+    "google-spreadsheet": "^2.0.1",
+    "lodash": "^4.11.1",
+    "needle": "^1.0.0",
+    "websocket": "^1.0.22"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "gulp": "^3.9.1",
+    "gulp-nodemon": "^2.0.6"
+  }
 }
