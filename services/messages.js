@@ -62,7 +62,29 @@ module.exports.init = function(cb) {
 // Send a message, takes standard Slack message data
 module.exports.send = send;
 
-function send(data) {
+// Allow for triggers to be added
+var triggers = {};
+module.exports.listenFor = function(trigger, callback) {
+    triggers[trigger] = callback;
+};
+
+function send(data, useHook) {
+    if(useHook) {
+        _.extend(data, {
+            token: config.token,
+            as_user: true
+        });
+        needle.post('https://slack.com/api/chat.postMessage', data, function(err, response){
+            if(err || _.get(response, 'body.ok')) {
+                console.log('Error posting message', {
+                    message: data,
+                    err: err
+                });
+            }
+        });
+        return;
+    }
+
     if(!connection || !connectionLive) { return console.log('No connection, message not sent', data); }
     data.id = ++messageIndex;
     console.log('Sending message', JSON.stringify(data));
@@ -96,48 +118,3 @@ function handleMessage(message) {
     }
 }
 
-var triggers = {};
-function listenFor(trigger, callback) {
-    triggers[trigger] = callback;
-}
-
-// Reply to any message containing "reply"
-listenFor('reply', function(message){
-    send({
-        "type": "message",
-        "channel": message.channel,
-        "text": "Sure, hi!"
-    });
-});
-
-// Reply to any message containing "list gigs"
-listenFor('list gigs', function(message){
-    data.getGigs(function(gigs){
-        var text = "*All gigs:*\n";
-        gigs = _.map(gigs, function(row){
-            return {
-                "color": "#36a64f",
-                "text": row.datum+'\n',
-                "fields": [
-                    {
-                        title: 'locatie',
-                        value: row.locatie,
-                        short: true
-                    },
-                    {
-                        title: 'Tijden',
-                        value: row.tijden,
-                        short: true
-                    }
-                ],
-                "mrkdwn_in": ["text", "fields"]
-            };
-        });
-        send({
-            "type": "message",
-            "channel": message.channel,
-            "text": text,
-            "attachments": JSON.stringify(gigs)
-        });
-    });
-});
