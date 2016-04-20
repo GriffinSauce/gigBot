@@ -1,4 +1,5 @@
 var async = require("async");
+var memoize = require("memoizee");
 var GoogleSpreadsheet = require("google-spreadsheet");
 
 // spreadsheet key is the long id in the sheets URL
@@ -25,7 +26,8 @@ module.exports.init = function(cb) {
     ], cb);
 };
 
-module.exports.getGigs = function(cb) {
+module.exports.getGigs = memoize(getGigs, {async: true, maxAge: 1000*60*5 }); // Cache for max 5 minutes
+function getGigs(cb) {
     // google provides some query options
     if(!sheet) {
         console.log('Error getting gigs, sheet not loaded');
@@ -35,6 +37,7 @@ module.exports.getGigs = function(cb) {
         offset: 1,
         limit: 20
     }, function( err, rows ){
+        console.log('Succesfully got %s gigs', rows.length);
         cb(rows);
     });
-};
+}

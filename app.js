@@ -10,6 +10,10 @@ async.series([
         data.init(cb);
     },
     function(cb){
+        // Build cache #yolo
+        data.getGigs(function(){});
+
+        // Initialize message hooks
         messages.init(function(){
             // callback, messages is (probably) online!
             console.log('Message service online');

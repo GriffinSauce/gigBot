@@ -109,7 +109,7 @@ function handleMessage(message) {
     }
 
     // Listen for triggers and call callback when found
-    if(message.type === 'message' && (message.text.indexOf(gigbot.name) !== -1 || message.text.indexOf('<@'+gigbot.id+'>') !== -1)) {
+    if(message.type === 'message' && message.text && (message.text.indexOf(gigbot.name) !== -1 || message.text.indexOf('<@'+gigbot.id+'>') !== -1)) {
         _.each(triggers, function(callback, trigger){
             if(message.text.indexOf(trigger) !== -1) {
                 callback(message);
