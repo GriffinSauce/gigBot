@@ -2,6 +2,7 @@
   "name": "gigBot",
   "version": "0.0.0",
   "description": "GigBot, a bot for gigs",
+  "private": true,
   "main": "app.js",
   "repository": {
     "type": "git",
