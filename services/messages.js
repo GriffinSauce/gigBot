@@ -18,19 +18,19 @@ var data = require('../services/data');
 var connection;
 var messageIndex = 0;
 var connectionLive = false;
-var callback;
 var gigbot;
+var devChannel;
 
 // Initialise message service and bind listeners
 module.exports.init = function(cb) {
-    callback = cb;
 
     // Start RTM session
     needle.get("https://slack.com/api/rtm.start?token="+config.token, function(err, response){
         if(!response.body.ok) { return console.error('Some kinda error', response.body.errors); }
         var team = response.body;
         gigbot = team.self;
-        //console.log(team);
+        devChannel = _.find(team.channels, {name: 'gigbot-dev'});
+        //console.log(devChannel);
 
         // Set up websocket client
         var client = new WebSocketClient();
@@ -43,6 +43,7 @@ module.exports.init = function(cb) {
         client.on('connect', function(conn) {
             connection = conn;
             connectionLive = true;
+            cb();
             conn.on('error', function(error) {
                 connectionLive = false;
                 console.log("Connection Error: " + error.toString());
@@ -70,34 +71,40 @@ module.exports.listenFor = function(trigger, callback) {
 
 function send(data, useHook) {
     _.extend(data, {
-        "type": "message"
+        "type": "message",
+        token: config.token,
+        as_user: true
     });
-    if(useHook) {
-        _.extend(data, {
-            token: config.token,
-            as_user: true
-        });
-        needle.post('https://slack.com/api/chat.postMessage', data, function(err, response){
-            if(err || _.get(response, 'body.ok')) {
-                console.log('Error posting message', {
-                    message: data,
-                    err: err
-                });
-            }
-        });
-        return;
+
+    // Redirect all coms to dev channel for development
+    if(config.env === 'local') {
+        data.text = '*[local]* '+data.text;
+        data.channel = devChannel.id;
     }
 
-    if(!connection || !connectionLive) { return console.log('No connection, message not sent', data); }
-    data.id = ++messageIndex;
-    console.log('Sending message', JSON.stringify(data));
-    connection.sendUTF(JSON.stringify(data));
+    needle.post('https://slack.com/api/chat.postMessage', data, function(err, response){
+        if(err || !_.get(response, 'body.ok')) {
+            console.log('Error posting message', {
+                message: data,
+                err: err,
+                body: _.get(response,'body')
+            });
+        }
+        console.log('Message posted');
+    });
+    return;
 }
 
 // Handle incoming messages
 // TODO: Split messages and other events
 function handleMessage(message) {
     message = JSON.parse(message.utf8Data);
+
+    // Only handle devChannel on local
+    if(config.env === 'local' && message.channel !== devChannel.id) {
+        return;
+    }
+
     console.log("Received:", message);
 
     // Here we should define which messages trigger which response

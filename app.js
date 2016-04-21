@@ -1,5 +1,7 @@
 console.log('Starting gigBot');
 
+var config = require('./loadConfig');
+
 var _ = require("lodash");
 var async = require("async");
 var data = require('./services/data');
@@ -19,6 +21,12 @@ async.series([
         messages.init(function(){
             // callback, messages is (probably) online!
             console.log('Message service online');
+
+            if(config.env === 'local') {
+                messages.send({
+                    "text": "Bot online"
+                });
+            }
 
             // Reply to any message containing "reply"
             messages.listenFor('reply', function(message){
