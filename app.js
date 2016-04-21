@@ -1,3 +1,5 @@
+console.log('Starting gigBot');
+
 var _ = require("lodash");
 var async = require("async");
 var data = require('./services/data');
