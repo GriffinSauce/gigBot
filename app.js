@@ -21,7 +21,6 @@ async.series([
             // Reply to any message containing "reply"
             messages.listenFor('reply', function(message){
                 messages.send({
-                    "type": "message",
                     "channel": message.channel,
                     "text": "Sure, hi!"
                 });
@@ -31,31 +30,24 @@ async.series([
             messages.listenFor('list gigs', function(message){
                 data.getGigs(function(gigs){
                     var text = "*All gigs:*\n";
-                    gigs = _.map(gigs, function(row){
-                        return {
-                            "color": "#36a64f",
-                            "text": row.datum+'\n',
-                            "fields": [
-                                {
-                                    title: 'locatie',
-                                    value: row.locatie,
-                                    short: true
-                                },
-                                {
-                                    title: 'Tijden',
-                                    value: row.tijden,
-                                    short: true
-                                }
-                            ],
-                            "mrkdwn_in": ["text", "fields"]
-                        };
-                    });
+                    gigs = _.map(gigs, renderGigToSlackAttachment);
                     messages.send({
-                        "type": "message",
                         "channel": message.channel,
                         "text": text,
-                        "attachments": JSON.stringify(gigs),
-                        "as_user": true
+                        "attachments": JSON.stringify(gigs)
+                    }, true);
+                });
+            });
+
+            // Reply to any message containing "next gig"
+            messages.listenFor('next gig', function(message){
+                data.getNextGig(function(gig){
+                    var text = "*Next upcoming gig:*\n";
+                    gig = renderGigToSlackAttachment(gig);
+                    messages.send({
+                        "channel": message.channel,
+                        "text": text,
+                        "attachments": JSON.stringify([gig])
                     }, true);
                 });
             });
@@ -63,3 +55,22 @@ async.series([
     }
 ]);
 
+function renderGigToSlackAttachment(gig) {
+    return {
+        "color": "#36a64f",
+        "text": gig.datum+'\n',
+        "fields": [
+            {
+                title: 'locatie',
+                value: gig.locatie,
+                short: true
+            },
+            {
+                title: 'Tijden',
+                value: gig.tijden,
+                short: true
+            }
+        ],
+        "mrkdwn_in": ["text", "fields"]
+    };
+}

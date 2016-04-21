@@ -1,10 +1,12 @@
 var async = require("async");
+var _ = require("lodash");
 var memoize = require("memoizee");
 var GoogleSpreadsheet = require("google-spreadsheet");
 
 // spreadsheet key is the long id in the sheets URL
 var doc = new GoogleSpreadsheet('1Bu6OWRZDerfXgdPfhuJFZydIY6oTE1MXywePgveHOek');
-var creds = require('../google-generated-creds.json');
+var config = require('../config');
+var creds = config.google;
 var sheet;
 
 module.exports.init = function(cb) {
@@ -41,3 +43,9 @@ function getGigs(cb) {
         cb(rows);
     });
 }
+
+module.exports.getNextGig = function(cb){
+    getGigs(function(gigs){
+        cb(_.first(gigs));
+    });
+};

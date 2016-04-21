@@ -69,6 +69,9 @@ module.exports.listenFor = function(trigger, callback) {
 };
 
 function send(data, useHook) {
+    _.extend(data, {
+        "type": "message"
+    });
     if(useHook) {
         _.extend(data, {
             token: config.token,
@@ -110,11 +113,35 @@ function handleMessage(message) {
 
     // Listen for triggers and call callback when found
     if(message.type === 'message' && message.text && (message.text.indexOf(gigbot.name) !== -1 || message.text.indexOf('<@'+gigbot.id+'>') !== -1)) {
+        var messageHandled = false;
         _.each(triggers, function(callback, trigger){
             if(message.text.indexOf(trigger) !== -1) {
+                messageHandled = true;
                 callback(message);
             }
         });
+
+        // TODO: Reply to unknown commands
+        if(!messageHandled) {
+            send({
+                "channel": message.channel,
+                "text": "Sorry I didn't understand, did you mean one of these?",
+                "attachments": JSON.stringify([{
+                    "color": "#36a64f",
+                    "fields": getTriggersAsAttachments(),
+                    "mrkdwn_in": ["text", "fields"]
+                }])
+            }, true);
+        }
     }
 }
 
+function getTriggersAsAttachments() {
+    return _.map(_.keys(triggers), function(trigger){
+        return {
+            title: trigger,
+            //value: gig.locatie,
+            short: true
+        };
+    });
+}
