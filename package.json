@@ -7,6 +7,10 @@
     "type": "git",
     "url": "git://[...].git"
   },
+  "engine": {
+    "node": "*",
+    "npm": "*"
+  },
   "scripts": {
     "start": "node ./app.js"
   },

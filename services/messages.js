@@ -10,7 +10,7 @@ var _ = require('lodash');
 var WebSocketClient = require('websocket').client;
 
 // Config
-var config = require('../config.json');
+var config = require('../loadConfig');
 
 var data = require('../services/data');
 

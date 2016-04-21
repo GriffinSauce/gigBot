@@ -5,7 +5,7 @@ var GoogleSpreadsheet = require("google-spreadsheet");
 
 // spreadsheet key is the long id in the sheets URL
 var doc = new GoogleSpreadsheet('1Bu6OWRZDerfXgdPfhuJFZydIY6oTE1MXywePgveHOek');
-var config = require('../config');
+var config = require('../loadConfig');
 var creds = config.google;
 var sheet;
 
