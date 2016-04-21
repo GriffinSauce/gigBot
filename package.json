@@ -13,7 +13,6 @@
     "npm": "*"
   },
   "scripts": {
-    "pre_build": "npm install",
     "start": "node ./app.js"
   },
   "author": "Peerby <dev.peerby.com>",
