@@ -26,7 +26,10 @@ module.exports.init = function(cb) {
 
     // Start RTM session
     needle.get("https://slack.com/api/rtm.start?token="+config.token, function(err, response){
-        if(!response.body.ok) { return console.error('Some kinda error', response.body.errors); }
+        if(err || !response.body.ok) {
+            console.error('Some kinda error', response.body);
+            return console.error(err);
+        }
         var team = response.body;
         gigbot = team.self;
         devChannel = _.find(team.channels, {name: 'gigbot-dev'});
@@ -104,6 +107,10 @@ function handleMessage(message) {
     if(config.env === 'local' && message.channel !== devChannel.id) {
         return;
     }
+    // Ignore devchannel on prod
+    if(config.env === 'prod' && message.channel === devChannel.id) {
+        return;
+    }
 
     console.log("Received:", message);
 
@@ -113,8 +120,6 @@ function handleMessage(message) {
     if(message.type === 'hello') {
         console.log('Initialized message service');
         connectionLive = true;
-        callback();
-        callback = null;
         return;
     }
 

@@ -2,12 +2,17 @@ console.log('Starting gigBot');
 
 var config = require('./loadConfig');
 
+var express = require('express');
 var _ = require("lodash");
 var async = require("async");
+var exphbs  = require('express-handlebars');
 var data = require('./services/data');
 
 // Services
 var messages = require('./services/messages');
+
+// Libs
+var slack = require('./lib/slack');
 
 async.series([
     function(cb){
@@ -40,7 +45,7 @@ async.series([
             messages.listenFor('list gigs', function(message){
                 data.getGigs(function(gigs){
                     var text = "*All gigs:*\n";
-                    gigs = _.map(gigs, renderGigToSlackAttachment);
+                    gigs = _.map(gigs, slack.renderGigToSlackAttachment);
                     messages.send({
                         "channel": message.channel,
                         "text": text,
@@ -53,7 +58,7 @@ async.series([
             messages.listenFor('next gig', function(message){
                 data.getNextGig(function(gig){
                     var text = "*Next upcoming gig:*\n";
-                    gig = renderGigToSlackAttachment(gig);
+                    gig = slack.renderGigToSlackAttachment(gig);
                     messages.send({
                         "channel": message.channel,
                         "text": text,
@@ -65,22 +70,15 @@ async.series([
     }
 ]);
 
-function renderGigToSlackAttachment(gig) {
-    return {
-        "color": "#36a64f",
-        "text": gig.datum+'\n',
-        "fields": [
-            {
-                title: 'locatie',
-                value: gig.locatie,
-                short: true
-            },
-            {
-                title: 'Tijden',
-                value: gig.tijden,
-                short: true
-            }
-        ],
-        "mrkdwn_in": ["text", "fields"]
-    };
-}
+// UI for ... settings? status? Whatever, we'll figure it out
+var app = express();
+app.engine('handlebars', exphbs({defaultLayout: 'main'}));
+app.set('view engine', 'handlebars');
+
+app.get('/', function (req, res) {
+    res.render('home');
+});
+
+app.listen(3000, function () {
+  console.log('Example app listening on port 3000!');
+});
