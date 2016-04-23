@@ -19,8 +19,6 @@ async.series([
         data.init(cb);
     },
     function(cb){
-        // Build cache #yolo
-        data.getGigs(function(){});
 
         // Initialize message hooks
         messages.init(function(){
@@ -70,7 +68,11 @@ app.engine('handlebars', exphbs({defaultLayout: 'main'}));
 app.set('view engine', 'handlebars');
 
 app.get('/', function (req, res) {
-    res.render('home');
+    data.getGigs(function(gigs){
+        res.render('home', {
+            gigs: gigs
+        });
+    });
 });
 
 var server_port = process.env.OPENSHIFT_NODEJS_PORT || 8080;
