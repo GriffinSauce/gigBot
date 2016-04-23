@@ -27,12 +27,6 @@ async.series([
             // callback, messages is (probably) online!
             console.log('Message service online');
 
-            if(config.env === 'local') {
-                messages.send({
-                    "text": "Bot online"
-                });
-            }
-
             // Reply to any message containing "reply"
             messages.listenFor('reply', function(message){
                 messages.send({

@@ -46,6 +46,10 @@ module.exports.init = function(cb) {
         client.on('connect', function(conn) {
             connection = conn;
             connectionLive = true;
+            messages.send({
+                text: "Bot online",
+                channel: devChannel.id
+            });
             cb();
             conn.on('error', function(error) {
                 connectionLive = false;
