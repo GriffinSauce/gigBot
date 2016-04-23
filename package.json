@@ -12,7 +12,7 @@
     "npm": "*"
   },
   "scripts": {
-    "preinstall": "cp ${OPENSHIFT_DATA_DIR}/secrets.json ${OPENSHIFT_REPO_DIR}",
+    "preinstall": "cp ${OPENSHIFT_DATA_DIR}secrets.json ${OPENSHIFT_REPO_DIR}",
     "start": "node ./app.js"
   },
   "author": "Peerby <dev.peerby.com>",
