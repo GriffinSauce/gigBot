@@ -1,18 +1,17 @@
 /*
  *  Service that handles all messaging for the app
- *  Sends messages, autoresponds to keywords and triggers other methods/services on keywords
+ *  Sends messageService, autoresponds to keywords and triggers other methods/services on keywords
  *
  */
 
 // Modules
-var needle = require('needle');
 var _ = require('lodash');
+var needle = require('needle');
 var WebSocketClient = require('websocket').client;
 
 // Config
 var config = require('../loadConfig');
-
-var data = require('../services/data');
+var slack = require('../lib/slack');
 
 // Vars
 var connection;
@@ -20,6 +19,7 @@ var messageIndex = 0;
 var connectionLive = false;
 var gigbot;
 var devChannel;
+var triggers = {};
 
 // Initialise message service and bind listeners
 module.exports.init = function(cb) {
@@ -67,15 +67,18 @@ module.exports.init = function(cb) {
     });
 };
 
-// Send a message, takes standard Slack message data
-module.exports.send = send;
-
 // Allow for triggers to be added
-var triggers = {};
 module.exports.listenFor = function(trigger, callback) {
     triggers[trigger] = callback;
 };
 
+/* Send a message
+ * Minimum input:
+ * {
+ *     "text": String
+ * }
+ */
+module.exports.send = send;
 function send(data, useHook) {
     _.extend(data, {
         "type": "message",
@@ -102,8 +105,7 @@ function send(data, useHook) {
     return;
 }
 
-// Handle incoming messages
-// TODO: Split messages and other events
+// Handle incoming messageService
 function handleMessage(message) {
     message = JSON.parse(message.utf8Data);
 
@@ -117,8 +119,6 @@ function handleMessage(message) {
     }
 
     console.log("Received:", message);
-
-    // Here we should define which messages trigger which response
 
     // Slack says hello on connection start, run callback
     if(message.type === 'hello') {
@@ -136,28 +136,16 @@ function handleMessage(message) {
                 callback(message);
             }
         });
-
-        // TODO: Reply to unknown commands
         if(!messageHandled) {
             send({
                 "channel": message.channel,
                 "text": "Sorry I didn't understand, did you mean one of these?",
                 "attachments": JSON.stringify([{
                     "color": "#36a64f",
-                    "fields": getTriggersAsAttachments(),
+                    "fields": slack.keysToAttachments(triggers),
                     "mrkdwn_in": ["text", "fields"]
                 }])
             }, true);
         }
     }
-}
-
-function getTriggersAsAttachments() {
-    return _.map(_.keys(triggers), function(trigger){
-        return {
-            title: trigger,
-            //value: gig.locatie,
-            short: true
-        };
-    });
 }

@@ -1,82 +1,58 @@
 console.log('Starting gigBot');
 
 var config = require('./loadConfig');
+var server = require('./server');
 
-var express = require('express');
 var _ = require("lodash");
 var async = require("async");
-var exphbs  = require('express-handlebars');
-var data = require('./services/data');
 
 // Services
-var messages = require('./services/messages');
+var messageService = require('./services/messages');
+var dataService = require('./services/data');
 
 // Libs
 var slack = require('./lib/slack');
 
 async.series([
     function(cb){
-        data.init(cb);
+        dataService.init(cb);
     },
     function(cb){
+        messageService.init(cb);
+    },
+    function(cb){
+        // Reply to any message containing "reply"
+        messageService.listenFor('reply', function(message){
+            messageService.send({
+                "channel": message.channel,
+                "text": "Sure, hi!"
+            });
+        });
 
-        // Initialize message hooks
-        messages.init(function(){
-            // callback, messages is (probably) online!
-            console.log('Message service online');
-
-            // Reply to any message containing "reply"
-            messages.listenFor('reply', function(message){
-                messages.send({
+        // Reply to any message containing "list gigs"
+        messageService.listenFor('list gigs', function(message){
+            dataService.getGigs(function(gigs){
+                var text = "*All gigs:*\n";
+                gigs = _.map(gigs, slack.renderGigToSlackAttachment);
+                messageService.send({
                     "channel": message.channel,
-                    "text": "Sure, hi!"
-                });
+                    "text": text,
+                    "attachments": JSON.stringify(gigs)
+                }, true);
             });
+        });
 
-            // Reply to any message containing "list gigs"
-            messages.listenFor('list gigs', function(message){
-                data.getGigs(function(gigs){
-                    var text = "*All gigs:*\n";
-                    gigs = _.map(gigs, slack.renderGigToSlackAttachment);
-                    messages.send({
-                        "channel": message.channel,
-                        "text": text,
-                        "attachments": JSON.stringify(gigs)
-                    }, true);
-                });
-            });
-
-            // Reply to any message containing "next gig"
-            messages.listenFor('next gig', function(message){
-                data.getNextGig(function(gig){
-                    var text = "*Next upcoming gig:*\n";
-                    gig = slack.renderGigToSlackAttachment(gig);
-                    messages.send({
-                        "channel": message.channel,
-                        "text": text,
-                        "attachments": JSON.stringify([gig])
-                    }, true);
-                });
+        // Reply to any message containing "next gig"
+        messageService.listenFor('next gig', function(message){
+            dataService.getNextGig(function(gig){
+                var text = "*Next upcoming gig:*\n";
+                gig = slack.renderGigToSlackAttachment(gig);
+                messageService.send({
+                    "channel": message.channel,
+                    "text": text,
+                    "attachments": JSON.stringify([gig])
+                }, true);
             });
         });
     }
 ]);
-
-// UI for ... settings? status? Whatever, we'll figure it out
-var app = express();
-app.engine('handlebars', exphbs({defaultLayout: 'main'}));
-app.set('view engine', 'handlebars');
-
-app.get('/', function (req, res) {
-    data.getGigs(function(gigs){
-        res.render('home', {
-            gigs: gigs
-        });
-    });
-});
-
-var server_port = process.env.OPENSHIFT_NODEJS_PORT || 8080;
-var server_ip_address = process.env.OPENSHIFT_NODEJS_IP || '127.0.0.1';
-app.listen(server_port, server_ip_address, function () {
-  console.log( "Listening on " + server_ip_address + ", server_port " + server_port );
-});

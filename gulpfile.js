@@ -20,7 +20,7 @@ gulp.task('default', ['start']);
 gulp.task('start', function () {
     nodemon({
         script: 'app.js'
-        , ext: 'js'
+        , ext: 'js handlebars'
         , env: { 'NODE_ENV': 'local' }
     });
 });
