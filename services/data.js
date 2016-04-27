@@ -1,11 +1,15 @@
-var async = require("async");
+var config = require('../loadConfig');
+
 var _ = require("lodash");
+var async = require("async");
 var memoize = require("memoizee");
+var moment = require("moment-timezone");
 var GoogleSpreadsheet = require("google-spreadsheet");
+var fulltextsearchlight = require('full-text-search-light');
+var search = new fulltextsearchlight();
 
 // spreadsheet key is the long id in the sheets URL
-var doc = new GoogleSpreadsheet('1Bu6OWRZDerfXgdPfhuJFZydIY6oTE1MXywePgveHOek');
-var config = require('../loadConfig');
+var doc = new GoogleSpreadsheet(config.spreadsheetKey);
 var creds = config.google;
 var sheet;
 
@@ -33,19 +37,50 @@ function getGigs(cb) {
     // google provides some query options
     if(!sheet) {
         console.log('Error getting gigs, sheet not loaded');
-        cb([]);
+        cb(new Error('noSheet'), []);
     }
     sheet.getRows({
         offset: 1,
         limit: 20
     }, function( err, rows ){
-        console.log('Succesfully got %s gigs', rows.length);
-        cb(rows);
+        if(err) {
+            return cb(err);
+        }
+
+        // Erase existing search data
+        search.drop();
+
+        // Process sheet data
+        var gigs = _.map(rows, function (row) {
+            row = _.omit(row, '_xml', '_links', 'id', 'app:edited');
+            var parsedDate = moment(row.datum, 'DD-MM-YYYY', true).tz("Europe/Amsterdam").locale('nl_NL');
+            row.datum = parsedDate.isValid() ? parsedDate : row.datum;
+
+            // Save for searching
+            search.add(row, function (key, val) {
+                return !_.includes(['datum', 'save', 'del'], key);
+            });
+
+            return row;
+        });
+
+        console.log('Succesfully got %s gigs', gigs.length);
+        cb(err, gigs);
     });
 }
 
 module.exports.getNextGig = function(cb){
-    getGigs(function(gigs){
-        cb(_.first(gigs));
+    getGigs(function(err, gigs){
+
+        // Todo: actually check date and get next gig instead of first
+        cb(err, _.first(gigs));
     });
 };
+
+module.exports.search = function(q, cb){
+    console.log('Searching for "'+q+'"');
+    // Make sure index is built
+    getGigs(function(err, gigs){
+        cb(err, search.search(q));
+    });
+}

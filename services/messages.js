@@ -69,8 +69,11 @@ module.exports.init = function(cb) {
 };
 
 // Allow for triggers to be added
-module.exports.listenFor = function(trigger, callback) {
-    triggers[trigger] = callback;
+module.exports.listenFor = function(trigger, description, callback) {
+    triggers[trigger] = {
+        description: description,
+        callback: callback
+    };
 };
 
 /* Send a message
@@ -133,12 +136,13 @@ function handleMessage(message) {
     }
 
     // Listen for triggers and call callback when found
-    if(message.type === 'message' && message.text && (message.text.indexOf(gigbot.name) !== -1 || message.text.indexOf('<@'+gigbot.id+'>') !== -1)) {
+    var toGigbot = message.text && (message.text.indexOf(gigbot.name) !== -1 || message.text.indexOf('<@'+gigbot.id+'>') !== -1);
+    if(message.type === 'message' && toGigbot) {
         var messageHandled = false;
-        _.each(triggers, function(callback, trigger){
-            if(message.text.indexOf(trigger) !== -1) {
+        _.each(triggers, function(trigger, triggerText){
+            if(message.text.indexOf(triggerText) !== -1) {
                 messageHandled = true;
-                callback(message);
+                trigger.callback(message);
             }
         });
         if(!messageHandled) {

@@ -1,4 +1,5 @@
 {
+    "spreadsheetKey": "1Bu6OWRZDerfXgdPfhuJFZydIY6oTE1MXywePgveHOek",
     "google": {
         "type": "service_account",
         "project_id": "gigbot-1286",

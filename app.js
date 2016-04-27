@@ -21,17 +21,18 @@ async.series([
         messageService.init(cb);
     },
     function(cb){
+
         // Reply to any message containing "reply"
-        messageService.listenFor('reply', function(message){
+        messageService.listenFor('reply', 'Just say something, anything', function(message){
             messageService.send({
                 "channel": message.channel,
-                "text": "Sure, hi!"
+                "text": _.sample(['Hi!', 'Yo', 'What\'s up?', 'Whazaaaaah', 'Hey', 'Sup?'])
             });
         });
 
         // Reply to any message containing "list gigs"
-        messageService.listenFor('list gigs', function(message){
-            dataService.getGigs(function(gigs){
+        messageService.listenFor('list gigs', 'List all gigs', function(message){
+            dataService.getGigs(function(err, gigs){
                 var text = "*All gigs:*\n";
                 gigs = _.map(gigs, slack.renderGigToSlackAttachment);
                 messageService.send({
@@ -43,14 +44,33 @@ async.series([
         });
 
         // Reply to any message containing "next gig"
-        messageService.listenFor('next gig', function(message){
-            dataService.getNextGig(function(gig){
+        messageService.listenFor('next gig', 'Show the first upcoming gig', function(message){
+            dataService.getNextGig(function(err, gig){
                 var text = "*Next upcoming gig:*\n";
                 gig = slack.renderGigToSlackAttachment(gig);
                 messageService.send({
                     "channel": message.channel,
                     "text": text,
                     "attachments": JSON.stringify([gig])
+                }, true);
+            });
+        });
+
+        // Reply to any message containing "next gig"
+        messageService.listenFor('find', 'Find a gig, use "show delft" to find any gigs containing the text "delft"', function(message){
+            var query = message.text.split('find ')[1];
+            dataService.search(query, function(err, results){
+                if(results.length === 0) {
+                    return messageService.send({
+                        "channel": message.channel,
+                        "text": 'Sorry, didn\'t find anything :('
+                    }, true);
+                }
+                results = _.map(results, slack.renderGigToSlackAttachment);
+                messageService.send({
+                    "channel": message.channel,
+                    "text": results.length > 1 ? 'Found these' : 'Found this',
+                    "attachments": JSON.stringify(results)
                 }, true);
             });
         });
