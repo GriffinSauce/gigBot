@@ -125,7 +125,7 @@ function handleMessage(message) {
     if(message.type === 'message' && config.logMessages.in) {
         console.log("Received:", message);
     }else{
-        console.log("Received message from "+_.find(users, {id:message.user}).name);
+        console.log("Received message from "+_.get(_.find(users, {id:message.user}),'name'));
     }
 
     // Slack says hello on connection start, run callback
