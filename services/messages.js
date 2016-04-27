@@ -20,6 +20,7 @@ var connectionLive = false;
 var gigbot;
 var devChannel;
 var triggers = {};
+var users = {};
 
 // Initialise message service and bind listeners
 module.exports.init = function(cb) {
@@ -33,7 +34,7 @@ module.exports.init = function(cb) {
         var team = response.body;
         gigbot = team.self;
         devChannel = _.find(team.channels, {name: 'gigbot-dev'});
-        //console.log(devChannel);
+        users = team.users;
 
         // Set up websocket client
         var client = new WebSocketClient();
@@ -118,7 +119,11 @@ function handleMessage(message) {
         return;
     }
 
-    console.log("Received:", message);
+    if(message.type === 'message' && config.logMessages.in) {
+        console.log("Received:", message);
+    }else{
+        console.log("Received message from "+_.find(users, {id:message.user}).name);
+    }
 
     // Slack says hello on connection start, run callback
     if(message.type === 'hello') {
