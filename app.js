@@ -57,7 +57,7 @@ async.series([
         });
 
         // Reply to any message containing "next gig"
-        messageService.listenFor('find', 'Find a gig, use "show delft" to find any gigs containing the text "delft"', function(message){
+        messageService.listenFor('find', 'Find a gig, use "find delft" to find any gigs containing the text "delft"', function(message){
             var query = message.text.split('find ')[1];
             dataService.search(query, function(err, results){
                 if(results.length === 0) {
