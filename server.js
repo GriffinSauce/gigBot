@@ -1,6 +1,7 @@
 var express = require('express');
 var exphbs  = require('express-handlebars');
 var dataService = require('./services/data');
+var messageService = require('./services/messages');
 
 // UI for ... settings? status? Whatever, we'll figure it out
 var app = express();
@@ -10,7 +11,8 @@ app.set('view engine', 'handlebars');
 app.get('/', function (req, res) {
     dataService.getGigs(function(err, gigs){
         res.render('home', {
-            gigs: gigs
+            gigs: gigs,
+            triggers: messageService.triggers
         });
     });
 });

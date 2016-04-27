@@ -19,8 +19,8 @@ var messageIndex = 0;
 var connectionLive = false;
 var gigbot;
 var devChannel;
-var triggers = {};
 var users = {};
+var triggers = module.exports.triggers = {};
 
 // Initialise message service and bind listeners
 module.exports.init = function(cb) {

@@ -5,3 +5,15 @@
 {{#if gigs}}
 <div>Loaded {{gigs.length}} gigs</div>
 {{/if}}
+
+<div>
+    Registered triggers:
+    {{#each triggers}}
+    <ul>
+        <li>
+            <b>{{@key}}: </b>
+            <span>{{description}}</span>
+        </li>
+    </ul>
+    {{/each}}
+</div>
