@@ -54,6 +54,7 @@ function getGigs(cb) {
         var gigs = _.map(rows, function (row) {
             row = _.omit(row, '_xml', '_links', 'id', 'app:edited');
             var parsedDate = moment(row.datum, 'DD-MM-YYYY', true).tz("Europe/Amsterdam").locale('nl_NL');
+            row.dateIsValid = parsedDate.isValid();
             row.datum = parsedDate.isValid() ? parsedDate : row.datum;
 
             // Save for searching
@@ -70,9 +71,20 @@ function getGigs(cb) {
 }
 
 module.exports.getNextGig = function(cb){
+    var fromDate = moment().tz("Europe/Amsterdam");
     getGigs(function(err, gigs){
 
-        // Todo: actually check date and get next gig instead of first
+        // Filter out gigs in the past or without date
+        gigs = _.filter(gigs, function(gig){
+            if(gig.dateIsValid){
+                return gig.datum.isAfter(fromDate);
+            } else {
+                return false;
+            }
+        });
+        gigs = _.sortBy(gigs, function(gig){
+            return gig.datum.valueOf();
+        });
         cb(err, _.first(gigs));
     });
 };
@@ -83,4 +95,4 @@ module.exports.search = function(q, cb){
     getGigs(function(err, gigs){
         cb(err, search.search(q));
     });
-}
+};
