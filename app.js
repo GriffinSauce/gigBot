@@ -74,5 +74,24 @@ async.series([
                 }, true);
             });
         });
+
+        // Return navigation links
+        messageService.listenFor('navigate to', 'Find a gig (just like "find") and show a Google Maps link', function(message){
+            var query = message.text.split('navigate to ')[1];
+            dataService.search(query, function(err, results){
+                if(results.length === 0) {
+                    return messageService.send({
+                        "channel": message.channel,
+                        "text": 'Sorry, didn\'t find anything :('
+                    }, true);
+                }
+                results = _.map(results, slack.renderGigToMapsLink);
+                results = results.join('\n\n---\n');
+                messageService.send({
+                    "channel": message.channel,
+                    "text": 'Drive safe!\n\n'+results
+                }, true);
+            });
+        });
     }
 ]);
