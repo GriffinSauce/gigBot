@@ -234,7 +234,7 @@ function handleIm(message){
     return send({
         im: true,
         channel: message.channel,
-        text: 'Ok, thanks!'
+        text: 'Ok, I think you said *'+answer+'*, thanks!'
     });
 }
 
