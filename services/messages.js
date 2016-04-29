@@ -7,6 +7,7 @@
 // Modules
 var _ = require('lodash');
 var needle = require('needle');
+var async = require('async');
 var WebSocketClient = require('websocket').client;
 
 // Config
@@ -19,6 +20,7 @@ var messageIndex = 0;
 var connectionLive = false;
 var gigbot;
 var devChannel;
+var team = {};
 var users = {};
 var triggers = module.exports.triggers = {};
 
@@ -31,7 +33,7 @@ module.exports.init = function(cb) {
             console.error('Some kinda error', response.body);
             return console.error(err);
         }
-        var team = response.body;
+        team = response.body;
         gigbot = team.self;
         devChannel = _.find(team.channels, {name: 'gigbot-dev'});
         users = team.users;
@@ -93,7 +95,9 @@ function send(data, useHook) {
     // Redirect all coms to dev channel for development
     if(config.env === 'local') {
         data.text = '*[local]* '+data.text;
-        data.channel = devChannel.id;
+        if(!data.personal) {
+            data.channel = devChannel.id;
+        }
     }
 
     needle.post('https://slack.com/api/chat.postMessage', data, function(err, response){
@@ -158,3 +162,34 @@ function handleMessage(message) {
         }
     }
 }
+
+var imChannels = [];
+module.exports.askForAvailability = function(userName, gig){
+    var user = _.find(users, {name: userName});
+    if(!user) {
+        return console.error('Couldn\'t start avalability convo with'+userName);
+    }
+    console.log('Started convo with', userName);
+    async.series([
+        function getImChannels(cb){
+            if(!_.isEmpty(imChannels)){
+                cb();
+            }
+            needle.get("https://slack.com/api/im.list?token="+config.token, function(err, response){
+                if(response.body.ok){
+                    imChannels = response.body.ims;
+                }
+                cb();
+            });
+        },
+        function(){
+            var channel = _.find(imChannels, {user:user.id});
+            send({
+                "personal": true,
+                "channel": user.id,
+                "text": "Hey"
+            });
+        }
+    ]);
+};
+
