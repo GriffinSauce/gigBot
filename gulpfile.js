@@ -48,7 +48,7 @@ gulp.task('watch', ['start'], function() {
         "views/**/*.handlebars"
     ], server.restart);
 
-    gulp.watch(['.rebooted']).on("change", browserSync.reload);
+    gulp.watch(['.rebooted', 'public/style.css']).on("change", browserSync.reload);
 });
 
 /*

@@ -17,6 +17,7 @@
   "author": "Peerby <dev.peerby.com>",
   "dependencies": {
     "async": "^2.0.0-rc.3",
+    "body-parser": "^1.15.0",
     "express": "^4.13.4",
     "express-handlebars": "^3.0.0",
     "full-text-search-light": "0.0.16",
