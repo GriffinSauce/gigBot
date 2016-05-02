@@ -7,6 +7,7 @@
 // Modules
 var _ = require('lodash');
 var needle = require('needle');
+var async = require('async');
 var WebSocketClient = require('websocket').client;
 
 // Config
@@ -19,8 +20,11 @@ var messageIndex = 0;
 var connectionLive = false;
 var gigbot;
 var devChannel;
+var team = {};
 var users = {};
 var triggers = module.exports.triggers = {};
+var imChannels = [];
+var requests = [];
 
 // Initialise message service and bind listeners
 module.exports.init = function(cb) {
@@ -31,7 +35,7 @@ module.exports.init = function(cb) {
             console.error('Some kinda error', response.body);
             return console.error(err);
         }
-        var team = response.body;
+        team = response.body;
         gigbot = team.self;
         devChannel = _.find(team.channels, {name: 'gigbot-dev'});
         users = team.users;
@@ -69,12 +73,13 @@ module.exports.init = function(cb) {
 };
 
 // Allow for triggers to be added
-module.exports.listenFor = function(trigger, description, callback) {
+module.exports.listenFor = listenFor;
+function listenFor(trigger, description, callback) {
     triggers[trigger] = {
         description: description,
         callback: callback
     };
-};
+}
 
 /* Send a message
  * Minimum input:
@@ -85,7 +90,7 @@ module.exports.listenFor = function(trigger, description, callback) {
 module.exports.send = send;
 function send(data, useHook) {
     _.extend(data, {
-        "type": "message",
+        type: "message",
         token: config.token,
         as_user: true
     });
@@ -93,7 +98,9 @@ function send(data, useHook) {
     // Redirect all coms to dev channel for development
     if(config.env === 'local') {
         data.text = '*[local]* '+data.text;
-        data.channel = devChannel.id;
+        if(!data.im) {
+            data.channel = devChannel.id;
+        }
     }
 
     needle.post('https://slack.com/api/chat.postMessage', data, function(err, response){
@@ -112,6 +119,19 @@ function send(data, useHook) {
 // Handle incoming messageService
 function handleMessage(message) {
     message = JSON.parse(message.utf8Data);
+    if(message.type === 'message' && config.logMessages.in) {
+        console.log("Received:", message);
+    }else{
+        console.log("Received message from "+_.get(_.find(users, {id:message.user}),'name'));
+    }
+
+    // Handle ims and skip the rest
+    var isIm = _.find(imChannels, function(imChannel){
+        return imChannel.id === message.channel;
+    });
+    if(message.type === 'message' && message.user !== gigbot.id && isIm) {
+        return handleIm(message);
+    }
 
     // Only handle devChannel on local
     if(config.env === 'local' && message.channel !== devChannel.id) {
@@ -120,12 +140,6 @@ function handleMessage(message) {
     // Ignore devchannel on prod
     if(config.env === 'prod' && message.channel === devChannel.id) {
         return;
-    }
-
-    if(message.type === 'message' && config.logMessages.in) {
-        console.log("Received:", message);
-    }else{
-        console.log("Received message from "+_.get(_.find(users, {id:message.user}),'name'));
     }
 
     // Slack says hello on connection start, run callback
@@ -157,4 +171,93 @@ function handleMessage(message) {
             }, true);
         }
     }
+}
+
+module.exports.askForAvailability = function(userName, gig){
+    var user = _.find(users, {name: userName});
+    if(!user) {
+        return console.error('Couldn\'t start avalability convo with'+userName);
+    }
+    if(!gig.dateIsValid){
+        return console.error('Couldn\'t start avalability convo with'+userName+', invalid date');
+    }
+    async.series([
+        function getImChannels(cb){
+            if(!_.isEmpty(imChannels)){
+                cb();
+            }
+            needle.get("https://slack.com/api/im.list?token="+config.token, function(err, response){
+                if(response.body.ok){
+                    imChannels = response.body.ims;
+                }
+                cb();
+            });
+        },
+        function(){
+            console.log('Started convo with', userName);
+            var channel = _.find(imChannels, {user:user.id});
+            requests.push({
+                user: user.id,
+                gig: gig,
+                channel: channel.id,
+                answer: 'unknown'
+            });
+            console.log('ongoing requests', requests);
+            send({
+                im: true,
+                channel: channel.id,
+                text: 'Hey, are you available for a gig on '+gig.datum.format('D MMMM YYYY')+'?'
+            });
+        }
+    ]);
+};
+
+function handleIm(message){
+    console.log('Handling IM');
+    var request = _.find(requests, {user: message.user, answer: 'unknown'});
+    if(!request){
+        return send({
+            im: true,
+            channel: message.channel,
+            text: 'Sorry, I don\'t know what you\'re talking about...'
+        });
+    }
+    var answer = parseAnswer(message.text);
+    if(answer === 'unclear') {
+        return send({
+            im: true,
+            channel: message.channel,
+            text: 'Didn\'t get that, please answer with a "yes" or "no"'
+        });
+    }
+    request.answer = answer;
+    return send({
+        im: true,
+        channel: message.channel,
+        text: 'Ok, I think you said *'+answer+'*, thanks!'
+    });
+}
+
+function parseAnswer(text){
+    var positiveReactions = ['yes', 'ja'];
+    var negativeReactions = ['no', 'nee'];
+    var isPositive = false;
+    var isNegative = false;
+    _.map(positiveReactions, function(string){
+        if(text.indexOf(string) !== -1) {
+            isPositive = true;
+        }
+    });
+    _.map(negativeReactions, function(string){
+        if(text.indexOf(string) !== -1) {
+            isNegative = true;
+        }
+    });
+    if((!isPositive && !isNegative) || (isPositive && isNegative)){
+        return 'unclear';
+    }
+    if(isNegative){
+        return 'no';
+    }
+    return 'yes';
 }

@@ -93,5 +93,9 @@ async.series([
                 }, true);
             });
         });
+
+        // dataService.getNextGig(function(err, gig){
+        //     messageService.askForAvailability('joris', gig);
+        // });
     }
 ]);
