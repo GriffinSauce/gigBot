@@ -1,12 +1,16 @@
 console.log('Starting gigBot');
 
+// Globals
 var config = require('./loadConfig');
-var server = require('./server');
+global.gigbot = {};
+global.gigbot.ipaddress = process.env.OPENSHIFT_NODEJS_IP || "127.0.0.1";
 
+// Modules
 var _ = require("lodash");
 var async = require("async");
 
-// Services
+// Server and services
+var server = require('./server');
 var messageService = require('./services/messages');
 var dataService = require('./services/data');
 
