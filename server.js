@@ -17,7 +17,7 @@ var Gig = require('./schemas/gig.js');
 var app = express();
 app.engine('handlebars', exphbs({ defaultLayout: 'main', helpers : handlebarsHelpers }));
 app.set('view engine', 'handlebars');
-app.use(bodyParser.urlencoded());
+app.use(bodyParser.urlencoded({ extended: true }));
 
 // Static
 app.use(express.static('public'));

@@ -35,12 +35,10 @@ var schema = new Schema(
 schema.pre('save', function(next) {
 
     // Rewrite break/newline+whitespace to single \n character
-    console.log('pre',this.venue.address);
     if(this.venue && this.venue.address) {
         this.venue.address = cleanBreaks(this.venue.address);
         this.venue.address = stripEndWhitespace(this.venue.address);
     }
-    console.log('post',this.venue.address);
     if(this.times) {
         this.times = cleanBreaks(this.times);
         this.times = stripEndWhitespace(this.times);
