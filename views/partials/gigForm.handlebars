@@ -1,0 +1,61 @@
+<!-- Modal -->
+<div class="modal fade" id="{{#if edit}}editModal_{{gig._id}}{{else}}newGigModal{{/if}}" tabindex="-1" role="dialog" aria-labelledby="modalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <form action="/gigs" method="post" data-parsley-validate>
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="modalLabel">{{#if edit}}Aanpassen{{else}}Nieuwe gig{{/if}}</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label for="venue_name">Naam</label>
+                                <input type="text" class="form-control" name="venue_name" placeholder="Naam" data-parsley-required value="{{gig.venue.name}}">
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label for="venue_address">Adres</label>
+                                <textarea type="text" class="form-control" name="venue_address" placeholder="Adres" data-parsley-required>{{whitespaceToNewline gig.venue.address}}</textarea>
+                                <p>{{whitespaceToNewline gig.venue.address}}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label for="date">Datum</label>
+                                <input type="date" class="form-control" name="date" placeholder="Times" data-parsley-required value="{{gig.date}}">
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label for="times">Tijden</label>
+                                <textarea type="text" class="form-control" name="times" placeholder="Tijden">{{whitespaceToNewline gig.times}}</textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="times">Backline</label>
+                        <textarea type="text" class="form-control" name="backline" placeholder="Backline">{{whitespaceToNewline gig.backline}}</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="times">Opmerkingen</label>
+                        <textarea type="text" class="form-control" name="comments" placeholder="Comments">{{whitespaceToNewline gig.comments}}</textarea>
+                    </div>
+                    <div class="checkbox">
+                        <label>
+                          <input type="checkbox" name="confirmed" selected="{{gig.confirmed}}"> Bevestigd
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Nevermind</button>
+                    <button type="submit" class="btn btn-success"><span class="glyphicon glyphicon-ok"></span> Opslaan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
