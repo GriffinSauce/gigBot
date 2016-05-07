@@ -1,4 +1,8 @@
-
+# Random crap
 node_modules/
+npm-debug.log
+.rebooted
 
+# Le Secrets
 secrets.json
+start_mongod.bat

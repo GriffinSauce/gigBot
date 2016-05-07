@@ -1,5 +1,7 @@
 var config = require('../loadConfig');
 
+var mongoose = require('mongoose');
+
 var _ = require("lodash");
 var async = require("async");
 var memoize = require("memoizee");
@@ -12,6 +14,25 @@ var search = new fulltextsearchlight();
 var doc = new GoogleSpreadsheet(config.spreadsheetKey);
 var creds = config.google;
 var sheet;
+
+// DATABASE CONNECTION
+if(config.env == 'local')
+{
+    mongoose.connect('mongodb://' + global.gigbot.ipaddress + '/gigbot');
+} else
+{
+    var dbconnectionURL = 'mongodb://';
+        dbconnectionURL += process.env.MONGODB_USER + ':';
+        dbconnectionURL += process.env.MONGODB_PASS + '@';
+        dbconnectionURL += process.env.OPENSHIFT_MONGODB_DB_HOST + ':';
+        dbconnectionURL += process.env.OPENSHIFT_MONGODB_DB_PORT + '/';
+        dbconnectionURL += process.env.MONGODB_DB;
+    mongoose.connect(dbconnectionURL);
+}
+
+var db = mongoose.connection;
+db.on('error', console.error.bind(console, 'connection error:'));
+db.once('open', function callback() { console.log('Connected to the database'); });
 
 module.exports.init = function(cb) {
     async.series([

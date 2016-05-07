@@ -32,7 +32,7 @@ module.exports.init = function(cb) {
     // Start RTM session
     needle.get("https://slack.com/api/rtm.start?token="+config.token, function(err, response){
         if(err || !response.body.ok) {
-            console.error('Some kinda error', response.body);
+            console.error('Some kinda error', _.get(response,'body'));
             return console.error(err);
         }
         team = response.body;
