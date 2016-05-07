@@ -38,6 +38,7 @@ app.get('/gigs', function (req, res) {
         });
     });
 });
+
 app.post('/gigs', function (req, res) {
     var data = {
         date: req.body.date,
@@ -56,6 +57,34 @@ app.post('/gigs', function (req, res) {
             console.log(err);
         }
         res.redirect('/gigs');
+    });
+});
+
+app.post('/gigs/:id', function (req, res) {
+    Gig.findOne({_id:req.params.id}, function(err, gig){
+        if(err) {
+            return res.send('500: Internal Server Error', 500);
+        }
+        if(!gig) {
+            return res.send('404: Page not Found', 404);
+        }
+
+        // Crudest update ever
+        gig.date = req.body.date;
+        gig.times = req.body.times;
+        gig.venue.name = req.body.venue_name;
+        gig.venue.address = req.body.venue_address;
+        gig.confirmed = req.body.confirmed;
+        gig.backline = req.body.backline;
+        gig.comments = req.body.comments;
+        gig.save(function(err){
+            if(err) {
+               return res.send('500: Internal Server Error', 500);
+            }
+
+            // Redirect
+            res.redirect('/gigs');
+        });
     });
 });
 
