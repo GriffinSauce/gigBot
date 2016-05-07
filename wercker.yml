@@ -15,3 +15,4 @@ build:
         name: clean up before deploy
         code: |
           rm -rf node_modules
+          rm -rf .gitignore
