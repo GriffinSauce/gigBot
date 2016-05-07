@@ -28,6 +28,12 @@ body {
     color: #BBB;
 }
 
+/*
+ *  New/update gig modal
+ */
+.edit-modal textarea {
+    white-space: pre-line;
+}
 
 /*
  * Parsley
