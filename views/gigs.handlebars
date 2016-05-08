@@ -31,13 +31,13 @@
             <div class="panel gig collapsed">
                 <div class="panel-heading">
                     <h3 class="panel-title">{{dateFormat date 'D MMMM YYYY'}} - {{venue.name}}</h3>
-                    <h4 class="confirmed">
+                    <div class="confirmed">
                         {{#if confirmed}}
                         <span class="label label-success">Bevestigd</span>
                         {{else}}
                         <span class="label label-warning">Nog niet bevestigd</span>
                         {{/if}}
-                    </h4>
+                    </div>
                 </div>
                 <div class="panel-body">
                     <div class="row">
