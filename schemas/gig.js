@@ -1,6 +1,7 @@
 /*globals require, module */
 
 var mongoose = require('mongoose');
+var moment = require('moment');
 var Schema = mongoose.Schema;
 var schema = new Schema(
 {
@@ -33,6 +34,8 @@ var schema = new Schema(
 });
 
 schema.pre('save', function(next) {
+
+    this.date = moment(this.date).startOf('day');
 
     // Rewrite break/newline+whitespace to single \n character
     if(this.venue && this.venue.address) {

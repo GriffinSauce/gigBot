@@ -45,7 +45,7 @@ app.get('/gigs', function (req, res) {
 app.post('/gigs', function (req, res) {
     var date = moment(req.body.date, 'D MMM YYYY');
     var data = {
-        date: date.toISOString(),
+        date: date,
         times: req.body.times,
         venue: {
             name: req.body.venue_name,
@@ -67,10 +67,10 @@ app.post('/gigs', function (req, res) {
 app.post('/gigs/:id', function (req, res) {
     Gig.findOne({_id:req.params.id}, function(err, gig){
         if(err) {
-            return res.send('500: Internal Server Error', 500);
+            return res.sendStatus(500);
         }
         if(!gig) {
-            return res.send('404: Page not Found', 404);
+            return res.sendStatus(404);
         }
 
         // Crudest update ever
