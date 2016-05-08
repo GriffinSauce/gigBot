@@ -18,8 +18,7 @@
                         <div class="col-sm-6">
                             <div class="form-group">
                                 <label for="venue_address">Adres</label>
-                                <textarea type="text" class="form-control" name="venue_address" placeholder="Adres" data-parsley-required>{{gig.venue.address}}</textarea>
-                                <p>{{messageServicegig.venue.address}}</p>
+                                <textarea type="text" class="form-control" name="venue_address" placeholder="Adres" data-parsley-required>{{{newlineFix gig.venue.address}}}</textarea>
                             </div>
                         </div>
                     </div>
@@ -33,17 +32,17 @@
                         <div class="col-sm-6">
                             <div class="form-group">
                                 <label for="times">Tijden</label>
-                                <textarea type="text" class="form-control" name="times" placeholder="Tijden">{{messageServicegig.times}}</textarea>
+                                <textarea type="text" class="form-control" name="times" placeholder="Tijden">{{{newlineFix gig.times}}}</textarea>
                             </div>
                         </div>
                     </div>
                     <div class="form-group">
                         <label for="times">Backline</label>
-                        <textarea type="text" class="form-control" name="backline" placeholder="Backline">{{messageServicegig.backline}}</textarea>
+                        <textarea type="text" class="form-control" name="backline" placeholder="Backline">{{{newlineFix gig.backline}}}</textarea>
                     </div>
                     <div class="form-group">
                         <label for="times">Opmerkingen</label>
-                        <textarea type="text" class="form-control" name="comments" placeholder="Comments">{{messageServicegig.comments}}</textarea>
+                        <textarea type="text" class="form-control" name="comments" placeholder="Comments">{{{newlineFix gig.comments}}}</textarea>
                     </div>
                     <div class="checkbox">
                         <label>

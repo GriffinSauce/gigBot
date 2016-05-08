@@ -23,6 +23,9 @@ body {
     top: 7px;
     right: 7px;
 }
+.gig p {
+    white-space: pre-wrap;
+}
 .gig button {
     margin-left: 10px;
 }

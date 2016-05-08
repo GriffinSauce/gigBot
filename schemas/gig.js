@@ -57,7 +57,7 @@ schema.pre('save', function(next) {
 module.exports = mongoose.model('Gig', schema);
 
 function cleanBreaks(string) {
-    return string && string.replace ? string.replace(/(\r\n\s*|\n\s*|\r\s*)/gm, '\n') : string;
+    return string && string.replace ? string.replace(/(\r\n)/gm, '\n') : string;
 }
 function stripEndWhitespace(string) {
     return string && string.replace ? string.replace(/\s$/, '') : string;
