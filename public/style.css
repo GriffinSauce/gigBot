@@ -12,10 +12,16 @@ body {
 .gig h4 {
     margin: 0;
 }
+.gig h5 {
+    margin-bottom: 0;
+}
+.gig .panel-heading {
+    border-bottom: 1px solid #eee;
+}
 .gig .confirmed {
     position: absolute;
-    top: 15px;
-    right: 15px;
+    top: 7px;
+    right: 7px;
 }
 .gig button {
     margin-left: 10px;

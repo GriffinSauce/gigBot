@@ -46,7 +46,7 @@
             {{#each gigs}}
             <div class="panel gig">
                 <div class="panel-heading">
-                    <h3 class="panel-title">{{dateFormat date 'D MMMM YYYY'}}</h3>
+                    <h3 class="panel-title">{{dateFormat date 'D MMMM YYYY'}} - {{venue.name}}</h3>
                     <h4 class="confirmed">
                         {{#if confirmed}}
                         <span class="label label-success">Bevestigd</span>
@@ -58,22 +58,21 @@
                 <div class="panel-body">
                     <div class="row">
                         <div class="col-sm-6">
-                            <h3 class="panel-title">{{venue.name}}</h3>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-sm-6">
+                            <h5>Adres</h5>
                             <p>{{{whitespaceToBr venue.address}}}</p>
                         </div>
                         <div class="col-sm-6">
+                            <h5>Tijden</h5>
                             <p>{{{whitespaceToBr times}}}<p>
                         </div>
                     </div>
                     <div class="row">
                         <div class="col-sm-6">
+                            <h5>Backline</h5>
                             <p>{{{whitespaceToBr backline}}}<p>
                         </div>
                         <div class="col-sm-6">
+                            <h5>Opmerkingen</h5>
                             <p>{{{whitespaceToBr comments}}}<p>
                         </div>
                         <div class="col-md-12">
