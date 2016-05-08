@@ -8,7 +8,7 @@ var schema = new Schema(
         type: Schema.Types.ObjectId
     },
     date: {
-        type: String
+        type: Date
     },
     venue: {
         name: {

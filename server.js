@@ -2,6 +2,9 @@ var fs = require('fs');
 var express = require('express');
 var exphbs  = require('express-handlebars');
 var bodyParser = require('body-parser');
+var _ = require('lodash');
+var moment = require('moment');
+moment.locale('nl_NL');
 
 // Lib
 var handlebarsHelpers = require('./lib/handlebarsHelpers');
@@ -40,8 +43,9 @@ app.get('/gigs', function (req, res) {
 });
 
 app.post('/gigs', function (req, res) {
+    var date = moment(req.body.date, 'D MMM YYYY');
     var data = {
-        date: req.body.date,
+        date: date.toISOString(),
         times: req.body.times,
         venue: {
             name: req.body.venue_name,
@@ -70,7 +74,8 @@ app.post('/gigs/:id', function (req, res) {
         }
 
         // Crudest update ever
-        gig.date = req.body.date;
+        var date = moment(req.body.date, 'D MMM YYYY');
+        gig.date = date;
         gig.times = req.body.times;
         gig.venue.name = req.body.venue_name;
         gig.venue.address = req.body.venue_address;
@@ -79,7 +84,7 @@ app.post('/gigs/:id', function (req, res) {
         gig.comments = req.body.comments;
         gig.save(function(err){
             if(err) {
-               return res.send('500: Internal Server Error', 500);
+               return res.sendStatus(500);
             }
 
             // Redirect
@@ -91,7 +96,7 @@ app.post('/gigs/:id', function (req, res) {
 app.delete('/gigs/:id', function (req, res) {
     Gig.findOneAndRemove({_id:req.params.id}, function(err, gig){
         console.log('Deleted gig id '+gig._id+' - '+_.get(gig,'venue.name'));
-        res.redirect('/gigs');
+        res.sendStatus(200);
     });
 });
 

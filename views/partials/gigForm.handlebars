@@ -26,7 +26,12 @@
                         <div class="col-sm-6">
                             <div class="form-group">
                                 <label for="date">Datum</label>
-                                <input type="date" class="form-control" name="date" placeholder="Times" data-parsley-required value="{{gig.date}}">
+                                <div class='input-group date' data-default='{{dateToISO gig.date}}'>
+                                    <input name="date" type='text' class="form-control" placeholder="Datum" data-parsley-required/>
+                                    <span class="input-group-addon">
+                                        <span class="glyphicon glyphicon-calendar"></span>
+                                    </span>
+                                </div>
                             </div>
                         </div>
                         <div class="col-sm-6">
