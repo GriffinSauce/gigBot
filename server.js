@@ -88,6 +88,13 @@ app.post('/gigs/:id', function (req, res) {
     });
 });
 
+app.delete('/gigs/:id', function (req, res) {
+    Gig.findOneAndRemove({_id:req.params.id}, function(err, gig){
+        console.log('Deleted gig id '+gig._id+' - '+_.get(gig,'venue.name'));
+        res.redirect('/gigs');
+    });
+});
+
 var server_port = process.env.OPENSHIFT_NODEJS_PORT || 8080;
 var server_ip_address = process.env.OPENSHIFT_NODEJS_IP || '127.0.0.1';
 app.listen(server_port, server_ip_address, function () {
