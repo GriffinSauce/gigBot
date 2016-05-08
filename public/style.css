@@ -18,6 +18,10 @@ body {
 .gig .panel-heading {
     border-bottom: 1px solid #eee;
 }
+.panel-footer {
+    background-color: #FBFBFB;
+    border-top: 1px solid #F1F1F1;
+}
 .gig .confirmed {
     position: absolute;
     top: 7px;
@@ -26,9 +30,38 @@ body {
 .gig p {
     white-space: pre-wrap;
 }
-.gig button {
+.gig .edit-buttons button {
     margin-left: 10px;
 }
+
+/* collapsing */
+.gig .chevron span{
+    top: 2px;
+}
+.gig .chevron {
+    float: left;
+    padding: 5px 0;
+    color: #B1B1B1;
+    transition: transform 250ms ease;
+    transform: rotate(-180deg);
+}
+.gig .panel-body {
+    transition: padding-top 150ms ease, padding-bottom 150ms ease, opacity 200ms ease;
+}
+.gig.collapsed .chevron {
+    transform: rotate(0deg);
+}
+.gig.collapsed .panel-heading {
+    border-bottom: none;
+}
+.gig.collapsed .panel-body {
+    padding-top: 0;
+    padding-bottom: 0;
+    opacity: 0;
+    height: 0;
+    overflow: hidden;
+}
+
 .new-gig > button{
     margin: 15px 0;
 }

@@ -28,7 +28,7 @@
         </div>
         <div class="col-md-9">
             {{#each gigs}}
-            <div class="panel gig">
+            <div class="panel gig collapsed">
                 <div class="panel-heading">
                     <h3 class="panel-title">{{dateFormat date 'D MMMM YYYY'}} - {{venue.name}}</h3>
                     <h4 class="confirmed">
@@ -47,21 +47,29 @@
                         </div>
                         <div class="col-sm-6">
                             <h5>Tijden</h5>
-                            <p>{{{whitespaceToBr times}}}<p>
+                            <p>{{{whitespaceToBr times}}}</p>
                         </div>
                     </div>
                     <div class="row">
                         <div class="col-sm-6">
                             <h5>Backline</h5>
-                            <p>{{{whitespaceToBr backline}}}<p>
+                            <p>{{{whitespaceToBr backline}}}</p>
                         </div>
                         <div class="col-sm-6">
                             <h5>Opmerkingen</h5>
-                            <p>{{{whitespaceToBr comments}}}<p>
+                            <p>{{{whitespaceToBr comments}}}</p>
                         </div>
-                        <div class="col-md-12">
+                    </div>
+                </div>
+                <div class="panel-footer">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="chevron"><span class="glyphicon glyphicon-chevron-down"></span></div>
+                        </div>
+                        <div class="col-md-6 edit-buttons">
                             <button class="btn pull-right btn-sm btn-danger btn-delete" data-id="{{_id}}">Verwijderen</button>
                             <button class="btn pull-right btn-sm btn-default" data-toggle="modal" data-target="#editModal_{{_id}}">Aanpassen</button>
+                            <div class="clearfix"></div>
                             {{> gigForm edit=true gig=@this}}
                         </div>
                     </div>

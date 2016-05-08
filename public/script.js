@@ -1,5 +1,12 @@
 $(document).ready(function(){
 
+    // Collapsing
+    $('.gig').bind('click', function(e) {
+        if($(e.target).closest('.btn, .modal').length === 0) {
+            $(this).toggleClass('collapsed');
+        }
+    });
+
     // Textarea autosizing
     var textareas = $('textarea');
     autosize(textareas);
