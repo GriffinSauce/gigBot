@@ -18,8 +18,10 @@
   "dependencies": {
     "async": "^2.0.0-rc.3",
     "body-parser": "^1.15.0",
+    "connect-mongo": "^1.1.0",
     "express": "^4.13.4",
     "express-handlebars": "^3.0.0",
+    "express-session": "^1.13.0",
     "full-text-search-light": "0.0.16",
     "google-spreadsheet": "^2.0.1",
     "lodash": "^4.11.1",
@@ -28,6 +30,8 @@
     "moment-timezone": "^0.5.3",
     "mongoose": "^4.4.14",
     "needle": "^1.0.0",
+    "passport": "^0.3.2",
+    "passport-local": "^1.0.0",
     "websocket": "^1.0.22"
   },
   "devDependencies": {

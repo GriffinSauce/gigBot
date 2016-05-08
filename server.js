@@ -1,6 +1,9 @@
 var fs = require('fs');
+var mongoose = require('mongoose');
 var express = require('express');
 var exphbs  = require('express-handlebars');
+var session = require('express-session');
+var MongoStore = require('connect-mongo')(session);
 var bodyParser = require('body-parser');
 var _ = require('lodash');
 var moment = require('moment');
@@ -8,6 +11,7 @@ moment.locale('nl_NL');
 
 // Lib
 var handlebarsHelpers = require('./lib/handlebarsHelpers');
+var passport = require('./lib/passport');
 
 // Services
 var dataService = require('./services/data');
@@ -20,20 +24,55 @@ var Gig = require('./schemas/gig.js');
 var app = express();
 app.engine('handlebars', exphbs({ defaultLayout: 'main', helpers : handlebarsHelpers }));
 app.set('view engine', 'handlebars');
-app.use(bodyParser.urlencoded({ extended: true }));
 
 // Static
 app.use(express.static('public'));
 
-app.get('/', function (req, res) {
+// Middlewarez
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(passport.initialize());
+app.use(session({
+    secret:'secret',
+    maxAge: new Date(Date.now() + 3600000),
+    saveUninitialized: true,
+    resave: true,
+    store: new MongoStore({
+        mongooseConnection: mongoose.connection
+    },
+    function(err){
+        console.log(err || 'connect-mongodb setup ok');
+    })
+}));
+app.use(passport.session());
+
+// Auth
+app.get('/login', function (req, res) {
+    res.render('login', {});
+});
+app.post('/login', passport.authenticate('local', {
+    successRedirect: '/gigs',
+    failureRedirect: '/login',
+    failureFlash: true
+}));
+
+app.use(function(req, res, next) {
+    console.log(req.session);
+    return next();
+    if (req.isAuthenticated()) { return next(); }
+    res.redirect('/login');
+});
+
+// Status
+app.get('/status', function (req, res) {
     dataService.getGigs(function(err, gigs){
-        res.render('home', {
+        res.render('status', {
             gigs: gigs,
             triggers: messageService.triggers
         });
     });
 });
 
+// Admin
 app.get('/gigs', function (req, res) {
     Gig.find({}, function(err, gigs){
         res.render('gigs', {
