@@ -66,6 +66,10 @@ body {
     overflow: hidden;
 }
 
+hr {
+    border-top-color: #e2e2e2;
+}
+
 .new-gig > button{
     margin: 15px 0;
 }

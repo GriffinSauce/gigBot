@@ -1,19 +1,35 @@
-<h1>GigBot</h1>
+{{> header}}
 
-<div>Status: online</div>
+<div class="container">
+    <div class="row">
+        <div class="col-md-12">
+            <h1>GigBot status</h1>
+        </div>
+        <div class="col-md-6">
+            <div class="panel">
+                <div class="panel-body">
+                    <div>Status: online</div>
 
-{{#if gigs}}
-<div>Loaded {{gigs.length}} gigs</div>
-{{/if}}
-
-<div>
-    Registered triggers:
-    {{#each triggers}}
-    <ul>
-        <li>
-            <b>{{@key}}: </b>
-            <span>{{description}}</span>
-        </li>
-    </ul>
-    {{/each}}
+                    {{#if gigs}}
+                    <div>Loaded {{gigs.length}} gigs</div>
+                    {{/if}}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="panel">
+                <div class="panel-body">
+                Registered triggers:
+                {{#each triggers}}
+                <ul>
+                    <li>
+                        <b>{{@key}}: </b>
+                        <span>{{description}}</span>
+                    </li>
+                </ul>
+                {{/each}}
+                </div>
+            </div>
+        </div>
+    </div>
 </div>

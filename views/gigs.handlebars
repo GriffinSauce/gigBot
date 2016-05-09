@@ -1,28 +1,4 @@
-<nav class="navbar navbar-default navbar-fixed-top">
-    <div class="container">
-        <!-- Brand and toggle get grouped for better mobile display -->
-        <div class="navbar-header">
-            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
-                <span class="sr-only">Toggle navigation</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </button>
-            <a class="navbar-brand" href="#">GigBot</a>
-        </div>
-
-        <!-- Collect the nav links, forms, and other content for toggling -->
-        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-            <ul class="nav navbar-nav">
-                <li class="active"><a href="#">Gigs <span class="sr-only">(current)</span></a></li>
-                <li><a href="#">Settings</a></li>
-            </ul>
-            <ul class="nav navbar-nav navbar-right">
-                <li><a href="/logout">Logout</a></li>
-            </ul>
-        </div>
-    </div>
-</nav>
+{{> header}}
 
 <div class="container">
     <div class="row">
@@ -91,6 +67,10 @@
             </form>
             <button type="button" class="btn btn-success btn-lg btn-block" data-toggle="modal" data-target="#newGigModal"><span class="glyphicon glyphicon-plus"></span> Nieuwe gig</button>
             <p>Vet man, nieuwe gigs inplannen, you rock!</p>
+            <hr>
+            {{#each settings.links}}
+                <p><a href="{{url}}">{{title}}</a></p>
+            {{/each}}
         </div>
     </div>
 </div>

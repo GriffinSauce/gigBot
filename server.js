@@ -1,6 +1,6 @@
-var fs = require('fs');
 var mongoose = require('mongoose');
 var express = require('express');
+var async = require('async');
 var exphbs  = require('express-handlebars');
 var session = require('express-session');
 var MongoStore = require('connect-mongo/es5')(session);
@@ -19,6 +19,7 @@ var messageService = require('./services/messages');
 
 // Schemas
 var Gig = require('./schemas/gig.js');
+var Settings = require('./schemas/settings.js');
 
 // UI for ... settings? status? Whatever, we'll figure it out
 var app = express();
@@ -46,7 +47,7 @@ app.use(passport.session());
 
 // Auth routes
 app.get('/login', function (req, res) {
-    res.render('login', {});
+    res.render('login');
 });
 app.post('/login', passport.authenticate('local', {
     successRedirect: '/gigs',
@@ -69,22 +70,73 @@ app.use(function(req, res, next) {
     }
 });
 
+app.get('/', function (req, res) {
+    res.redirect('/gigs');
+});
+
 // Status
 app.get('/status', function (req, res) {
     dataService.getGigs(function(err, gigs){
         res.render('status', {
+            page: 'status',
             gigs: gigs,
             triggers: messageService.triggers
         });
     });
 });
 
-// Admin
-app.get('/gigs', function (req, res) {
-    Gig.find({}, function(err, gigs){
-        res.render('gigs', {
-            gigs: gigs
+// Settings
+app.get('/settings', function (req, res) {
+    Settings.findOne({}, function(err, settings){
+        res.render('settings', {
+            page: 'settings',
+            settings: settings
         });
+    });
+});
+app.post('/settings', function (req, res) {
+    console.log(req.body);
+    var input = req.body;
+    Settings.findOne({}, function(err, settings){
+        var updatedSettings = settings;
+        if(!settings) {
+            updatedSettings = new Settings();
+        }
+
+        // Rewrite links input
+        var links = [];
+        input.link_title = typeof input.link_title === 'string' ? [input.link_title] : input.link_title;
+        input.link_url = typeof input.link_url === 'string' ? [input.link_url] : input.link_url;
+        for(var i=0; i<input.link_title.length; i++) {
+            if(input.link_title[i] || input.link_url[i]) {
+                links.push({
+                    title: input.link_title[i],
+                    url: input.link_url[i]
+                });
+            }
+        }
+
+        // Save props
+        updatedSettings.links = links;
+        updatedSettings.save(function(err){
+            res.redirect('/settings');
+        });
+    });
+});
+
+// Gigs admin
+app.get('/gigs', function (req, res) {
+    async.series({
+        settings: function(cb) {
+            Settings.findOne({}, cb);
+        },
+        gigs: function(cb) {
+            Gig.findOne({}, cb);
+        }
+    },function(err, results){
+        res.render('gigs', _.extend({
+            page: 'gigs',
+        }, results));
     });
 });
 app.post('/gigs', function (req, res) {
@@ -148,6 +200,3 @@ var server_ip_address = process.env.OPENSHIFT_NODEJS_IP || '127.0.0.1';
 app.listen(server_port, server_ip_address, function () {
     console.log( "Listening on " + server_ip_address + ", server_port " + server_port );
 });
-
-// Write file for gulp to watch
-fs.writeFileSync('.rebooted', 'rebooted');

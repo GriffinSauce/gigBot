@@ -8,6 +8,7 @@ global.gigbot.ipaddress = process.env.OPENSHIFT_NODEJS_IP || "127.0.0.1";
 // Modules
 var _ = require("lodash");
 var async = require("async");
+var fs = require('fs');
 
 // Server and services
 var server = require('./server');
@@ -98,8 +99,15 @@ async.series([
             });
         });
 
+        cb();
+
         // dataService.getNextGig(function(err, gig){
         //     messageService.askForAvailability('joris', gig);
         // });
+    },
+    function(cb) {
+        // Write file for gulp to watch
+        fs.writeFileSync('.rebooted', 'rebooted');
+        cb();
     }
 ]);
