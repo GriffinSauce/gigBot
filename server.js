@@ -1,6 +1,9 @@
 var fs = require('fs');
+var mongoose = require('mongoose');
 var express = require('express');
 var exphbs  = require('express-handlebars');
+var session = require('express-session');
+var MongoStore = require('connect-mongo/es5')(session);
 var bodyParser = require('body-parser');
 var _ = require('lodash');
 var moment = require('moment');
@@ -8,6 +11,7 @@ moment.locale('nl_NL');
 
 // Lib
 var handlebarsHelpers = require('./lib/handlebarsHelpers');
+var passport = require('./lib/passport');
 
 // Services
 var dataService = require('./services/data');
@@ -20,20 +24,62 @@ var Gig = require('./schemas/gig.js');
 var app = express();
 app.engine('handlebars', exphbs({ defaultLayout: 'main', helpers : handlebarsHelpers }));
 app.set('view engine', 'handlebars');
-app.use(bodyParser.urlencoded({ extended: true }));
 
 // Static
 app.use(express.static('public'));
 
-app.get('/', function (req, res) {
+// Middlewarez
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(session({
+    secret:'secret',
+    saveUninitialized: true,
+    resave: true,
+    store: new MongoStore({
+        mongooseConnection: mongoose.connection
+    },
+    function(err){
+        console.log(err || 'connect-mongodb setup ok');
+    })
+}));
+app.use(passport.initialize());
+app.use(passport.session());
+
+// Auth routes
+app.get('/login', function (req, res) {
+    res.render('login', {});
+});
+app.post('/login', passport.authenticate('local', {
+    successRedirect: '/gigs',
+    failureRedirect: '/login',
+    failureFlash: true
+}));
+app.get('/logout', function(req, res){
+    req.logout();
+    res.redirect('/');
+});
+
+// All routes below are authenticated
+app.use(function(req, res, next) {
+    if(req.user === undefined) {
+        console.log('Not authenticated, redirecting to login');
+        req.session.redirect_to = req.url;
+        res.redirect('/login');
+    } else {
+        next();
+    }
+});
+
+// Status
+app.get('/status', function (req, res) {
     dataService.getGigs(function(err, gigs){
-        res.render('home', {
+        res.render('status', {
             gigs: gigs,
             triggers: messageService.triggers
         });
     });
 });
 
+// Admin
 app.get('/gigs', function (req, res) {
     Gig.find({}, function(err, gigs){
         res.render('gigs', {
@@ -41,7 +87,6 @@ app.get('/gigs', function (req, res) {
         });
     });
 });
-
 app.post('/gigs', function (req, res) {
     var date = moment(req.body.date, 'D MMM YYYY');
     var data = {
@@ -63,7 +108,6 @@ app.post('/gigs', function (req, res) {
         res.redirect('/gigs');
     });
 });
-
 app.post('/gigs/:id', function (req, res) {
     Gig.findOne({_id:req.params.id}, function(err, gig){
         if(err) {
@@ -92,7 +136,6 @@ app.post('/gigs/:id', function (req, res) {
         });
     });
 });
-
 app.delete('/gigs/:id', function (req, res) {
     Gig.findOneAndRemove({_id:req.params.id}, function(err, gig){
         console.log('Deleted gig id '+gig._id+' - '+_.get(gig,'venue.name'));
