@@ -30,10 +30,8 @@ app.use(express.static('public'));
 
 // Middlewarez
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(passport.initialize());
 app.use(session({
     secret:'secret',
-    maxAge: new Date(Date.now() + 3600000),
     saveUninitialized: true,
     resave: true,
     store: new MongoStore({
@@ -43,9 +41,10 @@ app.use(session({
         console.log(err || 'connect-mongodb setup ok');
     })
 }));
+app.use(passport.initialize());
 app.use(passport.session());
 
-// Auth
+// Auth routes
 app.get('/login', function (req, res) {
     res.render('login', {});
 });
@@ -54,12 +53,20 @@ app.post('/login', passport.authenticate('local', {
     failureRedirect: '/login',
     failureFlash: true
 }));
+app.get('/logout', function(req, res){
+    req.logout();
+    res.redirect('/');
+});
 
+// All routes below are authenticated
 app.use(function(req, res, next) {
-    console.log(req.session);
-    return next();
-    if (req.isAuthenticated()) { return next(); }
-    res.redirect('/login');
+    if(req.user === undefined) {
+        console.log('Not authenticated, redirecting to login');
+        req.session.redirect_to = req.url;
+        res.redirect('/login');
+    } else {
+        next();
+    }
 });
 
 // Status
@@ -80,7 +87,6 @@ app.get('/gigs', function (req, res) {
         });
     });
 });
-
 app.post('/gigs', function (req, res) {
     var date = moment(req.body.date, 'D MMM YYYY');
     var data = {
@@ -102,7 +108,6 @@ app.post('/gigs', function (req, res) {
         res.redirect('/gigs');
     });
 });
-
 app.post('/gigs/:id', function (req, res) {
     Gig.findOne({_id:req.params.id}, function(err, gig){
         if(err) {
@@ -131,7 +136,6 @@ app.post('/gigs/:id', function (req, res) {
         });
     });
 });
-
 app.delete('/gigs/:id', function (req, res) {
     Gig.findOneAndRemove({_id:req.params.id}, function(err, gig){
         console.log('Deleted gig id '+gig._id+' - '+_.get(gig,'venue.name'));
