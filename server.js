@@ -131,7 +131,7 @@ app.get('/gigs', function (req, res) {
             Settings.findOne({}, cb);
         },
         gigs: function(cb) {
-            Gig.findOne({}, cb);
+            Gig.find({}, cb);
         }
     },function(err, results){
         res.render('gigs', _.extend({
