@@ -6,6 +6,7 @@ var session = require('express-session');
 var MongoStore = require('connect-mongo/es5')(session);
 var bodyParser = require('body-parser');
 var _ = require('lodash');
+var fs = require('fs');
 var moment = require('moment');
 moment.locale('nl_NL');
 
@@ -136,6 +137,24 @@ app.get('/gigs', function (req, res) {
     },function(err, results){
         res.render('gigs', _.extend({
             page: 'gigs',
+            gig: {
+                // TODO: Make this dynamic
+                availability: [
+                    {
+                        user: 'claire',
+                        available: 'unknown'
+                    }, {
+                        user: 'joris',
+                        available: 'unknown'
+                    }, {
+                        user: 'sjoerd',
+                        available: 'unknown'
+                    }, {
+                        user: 'vincent',
+                        available: 'unknown'
+                    }
+                ]
+            }
         }, results));
     });
 });
@@ -150,7 +169,7 @@ app.post('/gigs', function (req, res) {
         },
         confirmed: req.body.confirmed,
         backline: req.body.backline,
-        comments: req.body.comments
+        comments: req.body.comments,
     };
     var gig = new Gig(data);
     gig.save(function(err){
@@ -178,6 +197,24 @@ app.post('/gigs/:id', function (req, res) {
         gig.confirmed = req.body.confirmed;
         gig.backline = req.body.backline;
         gig.comments = req.body.comments;
+
+        // TODO: Make this dynamic
+        gig.availability = [
+            {
+                user: 'claire',
+                available: req.body['availability.claire']
+            }, {
+                user: 'joris',
+                available: req.body['availability.joris']
+            }, {
+                user: 'sjoerd',
+                available: req.body['availability.sjoerd']
+            }, {
+                user: 'vincent',
+                available: req.body['availability.vincent']
+            }
+        ];
+        console.dir(gig.toObject());
         gig.save(function(err){
             if(err) {
                return res.sendStatus(500);
@@ -200,3 +237,6 @@ var server_ip_address = process.env.OPENSHIFT_NODEJS_IP || '127.0.0.1';
 app.listen(server_port, server_ip_address, function () {
     console.log( "Listening on " + server_ip_address + ", server_port " + server_port );
 });
+
+// Write file for gulp to watch
+fs.writeFileSync('.rebooted', 'rebooted');
