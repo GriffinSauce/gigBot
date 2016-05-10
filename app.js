@@ -107,7 +107,7 @@ async.series([
     },
     function(cb) {
         // Write file for gulp to watch
-        fs.writeFileSync('.rebooted', 'rebooted');
+        //fs.writeFileSync('.rebooted', 'rebooted');
         cb();
     }
 ]);

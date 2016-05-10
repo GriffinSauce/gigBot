@@ -38,6 +38,21 @@ body {
     margin-left: 10px;
 }
 
+.gig .availability {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+}
+.gig .availability .icon-unknown {
+    color: #CCC;
+}
+.gig .availability .icon-no {
+    color: #FF0000;
+}
+.gig .availability .icon-yes {
+    color: #65d865;
+}
+
 /* collapsing */
 .gig .chevron span{
     top: 2px;
@@ -83,6 +98,12 @@ hr {
  */
 .edit-modal textarea {
     white-space: pre-line;
+}
+.edit-modal .availability-label {
+    display: inline-block;
+    width: 65px;
+    margin-bottom: 7px;
+    text-transform: capitalize;
 }
 
 /*

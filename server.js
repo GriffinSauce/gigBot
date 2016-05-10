@@ -170,6 +170,21 @@ app.post('/gigs', function (req, res) {
         confirmed: req.body.confirmed,
         backline: req.body.backline,
         comments: req.body.comments,
+        availability: [
+            {
+                user: 'claire',
+                available: req.body['availability.claire']
+            }, {
+                user: 'joris',
+                available: req.body['availability.joris']
+            }, {
+                user: 'sjoerd',
+                available: req.body['availability.sjoerd']
+            }, {
+                user: 'vincent',
+                available: req.body['availability.vincent']
+            }
+        ]
     };
     var gig = new Gig(data);
     gig.save(function(err){

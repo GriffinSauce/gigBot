@@ -17,6 +17,19 @@
                         <span class="label label-warning">Nog niet bevestigd</span>
                         {{/if}}
                     </div>
+                    <div class="availability">
+                        {{#each availability}}
+                            {{#ifCond available '===' 'unknown'}}
+                            <span class="icon-unknown glyphicon glyphicon-question-sign"></span>
+                            {{/ifCond}}
+                            {{#ifCond available '===' 'no'}}
+                            <span class="icon-no glyphicon glyphicon-minus-sign"></span>
+                            {{/ifCond}}
+                            {{#ifCond available '===' 'yes'}}
+                            <span class="icon-yes glyphicon glyphicon-ok"></span>
+                            {{/ifCond}}
+                        {{/each}}
+                    </div>
                 </div>
                 <div class="panel-body">
                     <div class="row">
