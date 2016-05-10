@@ -49,10 +49,34 @@
                         <label for="times">Opmerkingen</label>
                         <textarea type="text" class="form-control" name="comments" placeholder="Comments">{{{newlineFix gig.comments}}}</textarea>
                     </div>
-                    <div class="checkbox">
-                        <label>
-                          <input type="checkbox" name="confirmed" {{#if gig.confirmed}}checked="true"{{/if}}> Bevestigd
-                        </label>
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <div class="checkbox">
+                                <label>
+                                  <input type="checkbox" name="confirmed" {{#if gig.confirmed}}checked="true"{{/if}}> Bevestigd
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <h6>Beschikbaarheid</h6>
+                            {{#each gig.availability}}
+                            <div class="availability-label">
+                                <label>{{user}}</label>
+                            </div>
+                            <div class="btn-group" data-toggle="buttons">
+                                <label class="btn btn-default {{#ifCond available '===' 'unknown'}}active{{/ifCond}}">
+                                    <input type="radio" name="availability.{{user}}" value="unknown" autocomplete="off" {{#ifCond available '===' 'unknown'}}checked{{/ifCond}}> Onbekend
+                                </label>
+                                <label class="btn btn-default {{#ifCond available '===' 'no'}}active{{/ifCond}}">
+                                <input type="radio" name="availability.{{user}}" value="no" autocomplete="off" {{#ifCond available '===' 'no'}}checked{{/ifCond}}> Nee
+                                </label>
+                                <label class="btn btn-default {{#ifCond available '===' 'yes'}}active{{/ifCond}}">
+                                <input type="radio" name="availability.{{user}}" value="yes" autocomplete="off" {{#ifCond available '===' 'yes'}}checked{{/ifCond}}> Ja
+                                </label>
+                            </div>
+                            <div class='clearfix'></div>
+                            {{/each}}
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">

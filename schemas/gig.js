@@ -30,7 +30,16 @@ var schema = new Schema(
     },
     confirmed: {
         type: Boolean
-    }
+    },
+    availability: [{
+        _id:false,
+        user: { type: String },
+        available: {
+            type: String,
+            default: 'unknown',
+            enum: ['unknown', 'no', 'yes']
+        }
+    }]
 });
 
 schema.pre('save', function(next) {
