@@ -135,6 +135,27 @@ app.get('/gigs', function (req, res) {
             Gig.find({}, cb);
         }
     },function(err, results){
+        results.gigs = _.map(results.gigs, function(gig){
+            gig = gig.toObject();
+            if(_.isEmpty(gig.availability)) {
+                gig.availability = [
+                    {
+                        user: 'claire',
+                        available: 'unknown'
+                    }, {
+                        user: 'joris',
+                        available: 'unknown'
+                    }, {
+                        user: 'sjoerd',
+                        available: 'unknown'
+                    }, {
+                        user: 'vincent',
+                        available: 'unknown'
+                    }
+                ];
+            }
+            return gig;
+        });
         res.render('gigs', _.extend({
             page: 'gigs',
             gig: {
