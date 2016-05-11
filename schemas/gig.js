@@ -32,14 +32,24 @@ var schema = new Schema(
         type: Boolean
     },
     availability: [{
-        _id:false,
-        user: { type: String },
+        _id: false,
+        user: {
+            type: String
+        },
         available: {
             type: String,
             default: 'unknown',
             enum: ['unknown', 'no', 'yes']
         }
-    }]
+    }],
+    request: {
+        started: {
+            type: Date
+        },
+        active: {
+            type: Boolean
+        }
+    }
 });
 
 schema.pre('save', function(next) {

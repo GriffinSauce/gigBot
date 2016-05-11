@@ -42,4 +42,22 @@ $(document).ready(function(){
             });
         }
     });
+
+    // Request buttons
+    $('.gig .btn-request').click(function(){
+        var id = $(this).data('id');
+        if(!id) {
+            return alert('Shit\'s broken yo');
+        }
+        if(confirm('Ik ga alle leden vragen of ze kunnen, weet je het zeker?')) {
+            $.ajax({
+                url: '/gigs/'+id+'/request',
+                method: 'POST'
+            }).done(function(data){
+                location.reload();
+            }).fail(function(data){
+                alert('Shit\'s broken yo');
+            });
+        }
+    });
 });

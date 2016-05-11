@@ -7,8 +7,12 @@
 // Modules
 var _ = require('lodash');
 var needle = require('needle');
+var moment = require('moment');
 var async = require('async');
 var WebSocketClient = require('websocket').client;
+
+// Schemas
+var Gig = require('../schemas/gig.js');
 
 // Config
 var config = require('../loadConfig');
@@ -103,6 +107,10 @@ function send(data, useHook) {
         }
     }
 
+    if(config.logMessages.out) {
+        console.log("Sending:", data);
+    }
+
     needle.post('https://slack.com/api/chat.postMessage', data, function(err, response){
         if(err || !_.get(response, 'body.ok')) {
             console.log('Error posting message', {
@@ -178,9 +186,6 @@ module.exports.askForAvailability = function(userName, gig){
     if(!user) {
         return console.error('Couldn\'t start avalability convo with'+userName);
     }
-    if(!gig.dateIsValid){
-        return console.error('Couldn\'t start avalability convo with'+userName+', invalid date');
-    }
     async.series([
         function getImChannels(cb){
             if(!_.isEmpty(imChannels)){
@@ -198,7 +203,7 @@ module.exports.askForAvailability = function(userName, gig){
             var channel = _.find(imChannels, {user:user.id});
             requests.push({
                 user: user.id,
-                gig: gig,
+                gig: gig.id,
                 channel: channel.id,
                 answer: 'unknown'
             });
@@ -206,7 +211,7 @@ module.exports.askForAvailability = function(userName, gig){
             send({
                 im: true,
                 channel: channel.id,
-                text: 'Hey, are you available for a gig on '+gig.datum.format('D MMMM YYYY')+'?'
+                text: 'Hey, are you available for a gig on '+moment(gig.date).format('D MMMM YYYY')+'?'+' ('+gig.venue.name+')'
             });
         }
     ]);
@@ -215,6 +220,13 @@ module.exports.askForAvailability = function(userName, gig){
 function handleIm(message){
     console.log('Handling IM');
     var request = _.find(requests, {user: message.user, answer: 'unknown'});
+
+    /*Gig.find({
+        'availability.'+message.user: {
+
+        }
+    })*/
+
     if(!request){
         return send({
             im: true,
@@ -231,6 +243,10 @@ function handleIm(message){
         });
     }
     request.answer = answer;
+
+    // TODO: save answer to db
+    // TODO: all responded? Notify in gigs channel
+
     return send({
         im: true,
         channel: message.channel,

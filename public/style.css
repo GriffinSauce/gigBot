@@ -37,6 +37,9 @@ body {
 .gig .edit-buttons button {
     margin-left: 10px;
 }
+.gig .btn-request {
+    margin-top: 10px;
+}
 
 .gig .availability {
     position: absolute;

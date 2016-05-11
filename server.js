@@ -268,6 +268,48 @@ app.delete('/gigs/:id', function (req, res) {
     });
 });
 
+// Request availability
+app.post('/gigs/:id/request', function (req, res) {
+
+    async.series([
+
+        // Check for ongoing requests to prevent race condition
+        function preventConfusion(cb) {
+            Gig.find({'request.active': true}, function(err, gigs){
+                if(gigs.length !== 0) {
+                    //return cb('alreadyRunningRequest');
+                }
+                cb(err);
+            });
+        },
+
+        // Start the request
+        function startRequest() {
+            Gig.findOne({_id:req.params.id}, function(err, gig){
+                if(err) {
+                    return res.sendStatus(500);
+                }
+                if(!gig) {
+                    return res.sendStatus(404);
+                }
+
+                messageService.askForAvailability('joris', gig);
+
+                gig.request = {
+                    started: moment(),
+                    active: true
+                };
+                gig.save();
+            });
+        }
+    ], function(err){
+        if(err === 'alreadyRunningRequest') {
+            // Show error
+        }
+        res.redirect('/gigs');
+    });
+});
+
 var server_port = process.env.OPENSHIFT_NODEJS_PORT || 8080;
 var server_ip_address = process.env.OPENSHIFT_NODEJS_IP || '127.0.0.1';
 app.listen(server_port, server_ip_address, function () {
