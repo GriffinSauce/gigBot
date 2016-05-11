@@ -15,15 +15,34 @@ var server = require('./server');
 var messageService = require('./services/messages');
 var dataService = require('./services/data');
 
+// Schemas
+var Settings = require('./schemas/settings.js');
+
 // Libs
 var slack = require('./lib/slack');
 
-async.series([
+async.waterfall([
     function(cb){
         dataService.init(cb);
     },
     function(cb){
-        messageService.init(cb);
+        messageService.init(function(err, slackUsers){
+            slackUsers = _.reject(slackUsers, { id:'USLACKBOT' });
+            slackUsers = _.reject(slackUsers, { name:'gigbot' });
+            slackUsers = _.map(slackUsers, _.partialRight(_.omit, 'presence', 'is_admin', 'is_owner', 'is_primary_owner', 'is_restricted', 'is_ultra_restricted', 'is_bot'));
+            cb(null, slackUsers);
+        });
+    },
+    function(slackUsers, cb){
+        Settings.findOne({}, function(err, settings){
+            if(settings.users && !_.isEmpty(settings.users)) {
+                //return cb();
+            }
+            settings.users = slackUsers;
+            settings.save(function(err){
+                cb(err);
+            });
+        });
     },
     function(cb){
 

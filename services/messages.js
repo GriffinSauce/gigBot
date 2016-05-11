@@ -59,7 +59,7 @@ module.exports.init = function(cb) {
                 text: "Bot online",
                 channel: devChannel.id
             });
-            cb();
+            cb(null, team.users);
             conn.on('error', function(error) {
                 connectionLive = false;
                 console.log("Connection Error: " + error.toString());

@@ -50,7 +50,9 @@ module.exports.init = function(cb) {
                 step();
             });
         }
-    ], cb);
+    ], function(err, results){
+        cb();
+    });
 };
 
 module.exports.getGigs = memoize(getGigs, {async: true, maxAge: 1000*60*5 }); // Cache for max 5 minutes
