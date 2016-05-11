@@ -1,3 +1,6 @@
+var config = require('./loadConfig');
+
+// Modules
 var mongoose = require('mongoose');
 var express = require('express');
 var async = require('async');
@@ -96,7 +99,6 @@ app.get('/settings', function (req, res) {
     });
 });
 app.post('/settings', function (req, res) {
-    console.log(req.body);
     var input = req.body;
     Settings.findOne({}, function(err, settings){
         var updatedSettings = settings;
@@ -123,10 +125,10 @@ app.post('/settings', function (req, res) {
             user.requiredForGigs = input['requiredForGigs_'+user.name]==='true';
             return user;
         });
-        console.dir(updatedSettings.users);
 
         // Save props
         updatedSettings.links = links;
+        global.gigbot.settings = updatedSettings.toObject();
         updatedSettings.save(function(err){
             res.redirect('/settings');
         });
@@ -292,7 +294,7 @@ app.post('/gigs/:id/request', function (req, res) {
         },
 
         // Start the request
-        function startRequest() {
+        function startRequest(cb) {
             Gig.findOne({_id:req.params.id}, function(err, gig){
                 if(err) {
                     return res.sendStatus(500);
@@ -301,20 +303,27 @@ app.post('/gigs/:id/request', function (req, res) {
                     return res.sendStatus(404);
                 }
 
-                messageService.askForAvailability('joris', gig);
+                // Only ask users that are required
+                var usersToAsk = _.filter(global.gigbot.settings.users, {
+                    requiredForGigs: true
+                });
+                _.each(usersToAsk, function(user){
+                    messageService.askForAvailability(user.name, gig);
+                });
 
+                // Register started request
                 gig.request = {
                     started: moment(),
                     active: true
                 };
-                gig.save();
+                gig.save(cb);
             });
         }
     ], function(err){
         if(err === 'alreadyRunningRequest') {
             // Show error
         }
-        res.redirect('/gigs');
+        res.sendStatus(200);
     });
 });
 

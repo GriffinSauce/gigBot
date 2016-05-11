@@ -2,7 +2,9 @@ console.log('Starting gigBot');
 
 // Globals
 var config = require('./loadConfig');
-global.gigbot = {};
+global.gigbot = {
+    settings: {}
+};
 global.gigbot.ipaddress = process.env.OPENSHIFT_NODEJS_IP || "127.0.0.1";
 
 // Modules
@@ -36,10 +38,12 @@ async.waterfall([
     function(slackUsers, cb){
         Settings.findOne({}, function(err, settings){
             if(settings.users && !_.isEmpty(settings.users)) {
+                global.gigbot.settings = settings.toObject();
                 return cb();
             }
             settings.users = slackUsers;
             settings.save(function(err){
+                global.gigbot.settings = settings.toObject();
                 cb(err);
             });
         });

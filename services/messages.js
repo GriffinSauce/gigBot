@@ -31,49 +31,62 @@ var imChannels = [];
 var requests = [];
 
 // Initialise message service and bind listeners
-module.exports.init = function(cb) {
+module.exports.init = function(done) {
+    async.series([
+        function startRTMSession(cb){
+            needle.get("https://slack.com/api/rtm.start?token="+config.token, function(err, response){
+                if(err || !response.body.ok) {
+                    console.error('Some kinda error', _.get(response,'body'));
+                    return console.error(err);
+                }
+                team = response.body;
+                gigbot = team.self;
+                devChannel = _.find(team.channels, {name: 'gigbot-dev'});
+                users = team.users;
 
-    // Start RTM session
-    needle.get("https://slack.com/api/rtm.start?token="+config.token, function(err, response){
-        if(err || !response.body.ok) {
-            console.error('Some kinda error', _.get(response,'body'));
-            return console.error(err);
+                // Set up websocket client
+                var client = new WebSocketClient();
+
+                client.on('connectFailed', function(error) {
+                    connectionLive = false;
+                    console.log('Connect Error: ' + error.toString());
+                });
+
+                client.on('connect', function(conn) {
+                    connection = conn;
+                    connectionLive = true;
+                    send({
+                        text: "Bot online",
+                        channel: devChannel.id
+                    });
+                    cb(null, team.users);
+                    conn.on('error', function(error) {
+                        connectionLive = false;
+                        console.log("Connection Error: " + error.toString());
+                    });
+                    conn.on('close', function() {
+                        connectionLive = false;
+                        console.log('echo-protocol Connection Closed');
+                    });
+                    conn.on('message', handleMessage);
+                });
+
+                // Try to connect
+                client.connect(response.body.url);
+            });
+        },
+        function getImChannels(cb){
+            if(!_.isEmpty(imChannels)){
+                cb();
+            }
+            needle.get("https://slack.com/api/im.list?token="+config.token, function(err, response){
+                if(response.body.ok){
+                    imChannels = response.body.ims;
+                }
+                cb();
+            });
         }
-        team = response.body;
-        gigbot = team.self;
-        devChannel = _.find(team.channels, {name: 'gigbot-dev'});
-        users = team.users;
-
-        // Set up websocket client
-        var client = new WebSocketClient();
-
-        client.on('connectFailed', function(error) {
-            connectionLive = false;
-            console.log('Connect Error: ' + error.toString());
-        });
-
-        client.on('connect', function(conn) {
-            connection = conn;
-            connectionLive = true;
-            send({
-                text: "Bot online",
-                channel: devChannel.id
-            });
-            cb(null, team.users);
-            conn.on('error', function(error) {
-                connectionLive = false;
-                console.log("Connection Error: " + error.toString());
-            });
-            conn.on('close', function() {
-                connectionLive = false;
-                console.log('echo-protocol Connection Closed');
-            });
-            conn.on('message', handleMessage);
-        });
-
-        // Try to connect
-        client.connect(response.body.url);
-    });
+    ], done);
 };
 
 // Allow for triggers to be added
@@ -187,17 +200,6 @@ module.exports.askForAvailability = function(userName, gig){
         return console.error('Couldn\'t start avalability convo with'+userName);
     }
     async.series([
-        function getImChannels(cb){
-            if(!_.isEmpty(imChannels)){
-                cb();
-            }
-            needle.get("https://slack.com/api/im.list?token="+config.token, function(err, response){
-                if(response.body.ok){
-                    imChannels = response.body.ims;
-                }
-                cb();
-            });
-        },
         function(){
             console.log('Started convo with', userName);
             var channel = _.find(imChannels, {user:user.id});
@@ -218,39 +220,59 @@ module.exports.askForAvailability = function(userName, gig){
 };
 
 function handleIm(message){
-    console.log('Handling IM');
-    var request = _.find(requests, {user: message.user, answer: 'unknown'});
+    console.log('Handling IM', message);
+    var user = _.find(global.gigbot.settings.users, {
+        id: message.user
+    });
+    //var request = _.find(requests, {user: message.user, answer: 'unknown'});
 
-    /*Gig.find({
-        'availability.'+message.user: {
-
+    var q = {
+        'request.active': true,
+        'availability': {
+            $elemMatch: {
+                user: user.name,
+                available: 'unknown'
+            }
         }
-    })*/
-
-    if(!request){
-        return send({
-            im: true,
-            channel: message.channel,
-            text: 'Sorry, I don\'t know what you\'re talking about...'
+    };
+    Gig.find(q, function(err, gigs){
+        if(gigs.length === 0){
+            return send({
+                im: true,
+                channel: message.channel,
+                text: 'Sorry, I don\'t know what you\'re talking about...'
+            });
+        }
+        if(gigs.length > 1){
+            return send({
+                im: true,
+                channel: message.channel,
+                text: 'Sorry, I\'m confused, please tell the admin!'
+            });
+        }
+        var answer = parseAnswer(message.text);
+        if(answer === 'unclear') {
+            return send({
+                im: true,
+                channel: message.channel,
+                text: 'Didn\'t get that, please answer with a "yes" or "no"'
+            });
+        }
+        var gig = gigs[0];
+        gig.availability = _.map(gig.availability, function(status){
+            if(status.user === user.name) {
+                status.available = answer;
+            }
+            return status;
         });
-    }
-    var answer = parseAnswer(message.text);
-    if(answer === 'unclear') {
-        return send({
-            im: true,
-            channel: message.channel,
-            text: 'Didn\'t get that, please answer with a "yes" or "no"'
+        console.log(gig.availability);
+        gig.save(function(){
+            return send({
+                im: true,
+                channel: message.channel,
+                text: 'Ok, I think you said *'+answer+'*, thanks!'
+            });
         });
-    }
-    request.answer = answer;
-
-    // TODO: save answer to db
-    // TODO: all responded? Notify in gigs channel
-
-    return send({
-        im: true,
-        channel: message.channel,
-        text: 'Ok, I think you said *'+answer+'*, thanks!'
     });
 }
 

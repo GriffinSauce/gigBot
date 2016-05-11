@@ -12,6 +12,6 @@
     },
     "logMessages": {
         "in": false,
-        "out": true
+        "out": false
     }
 }
