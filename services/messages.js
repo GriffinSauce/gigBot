@@ -265,7 +265,6 @@ function handleIm(message){
             }
             return status;
         });
-        console.log(gig.availability);
         gig.save(function(){
             return send({
                 im: true,

@@ -123,10 +123,6 @@ async.waterfall([
         });
 
         cb();
-
-        // dataService.getNextGig(function(err, gig){
-        //     messageService.askForAvailability('joris', gig);
-        // });
     },
     function(cb) {
         // Write file for gulp to watch

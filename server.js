@@ -145,46 +145,26 @@ app.get('/gigs', function (req, res) {
             Gig.find({}, cb);
         }
     },function(err, results){
+        var usersToAsk = _.filter(global.gigbot.settings.users, {
+            requiredForGigs: true
+        });
+        var defaultAvailability = _.map(usersToAsk, function(user){
+            return {
+                user: user.name,
+                available: req.body['availability.'+user.name]
+            };
+        });
         results.gigs = _.map(results.gigs, function(gig){
             gig = gig.toObject();
             if(_.isEmpty(gig.availability)) {
-                gig.availability = [
-                    {
-                        user: 'claire',
-                        available: 'unknown'
-                    }, {
-                        user: 'joris',
-                        available: 'unknown'
-                    }, {
-                        user: 'sjoerd',
-                        available: 'unknown'
-                    }, {
-                        user: 'vincent',
-                        available: 'unknown'
-                    }
-                ];
+                gig.availability = defaultAvailability;
             }
             return gig;
         });
         res.render('gigs', _.extend({
             page: 'gigs',
             gig: {
-                // TODO: Make this dynamic
-                availability: [
-                    {
-                        user: 'claire',
-                        available: 'unknown'
-                    }, {
-                        user: 'joris',
-                        available: 'unknown'
-                    }, {
-                        user: 'sjoerd',
-                        available: 'unknown'
-                    }, {
-                        user: 'vincent',
-                        available: 'unknown'
-                    }
-                ]
+                availability: defaultAvailability
             }
         }, results));
     });
@@ -200,23 +180,17 @@ app.post('/gigs', function (req, res) {
         },
         confirmed: req.body.confirmed,
         backline: req.body.backline,
-        comments: req.body.comments,
-        availability: [
-            {
-                user: 'claire',
-                available: req.body['availability.claire']
-            }, {
-                user: 'joris',
-                available: req.body['availability.joris']
-            }, {
-                user: 'sjoerd',
-                available: req.body['availability.sjoerd']
-            }, {
-                user: 'vincent',
-                available: req.body['availability.vincent']
-            }
-        ]
+        comments: req.body.comments
     };
+    var usersToAsk = _.filter(global.gigbot.settings.users, {
+        requiredForGigs: true
+    });
+    data.availability = _.map(usersToAsk, function(user){
+        return {
+            user: user.name,
+            available: req.body['availability.'+user.name]
+        };
+    });
     var gig = new Gig(data);
     gig.save(function(err){
         if(err) {
@@ -244,22 +218,15 @@ app.post('/gigs/:id', function (req, res) {
         gig.backline = req.body.backline;
         gig.comments = req.body.comments;
 
-        // TODO: Make this dynamic
-        gig.availability = [
-            {
-                user: 'claire',
-                available: req.body['availability.claire']
-            }, {
-                user: 'joris',
-                available: req.body['availability.joris']
-            }, {
-                user: 'sjoerd',
-                available: req.body['availability.sjoerd']
-            }, {
-                user: 'vincent',
-                available: req.body['availability.vincent']
-            }
-        ];
+        var usersToAsk = _.filter(global.gigbot.settings.users, {
+            requiredForGigs: true
+        });
+        gig.availability = _.map(usersToAsk, function(user){
+            return {
+                user: user.name,
+                available: req.body['availability.'+user.name]
+            };
+        });
         console.dir(gig.toObject());
         gig.save(function(err){
             if(err) {
