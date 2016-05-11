@@ -4,65 +4,72 @@
     <div class="row">
         <div class="col-md-12">
             <h1>Settings</h1>
-        </div>
-        <div class="col-md-6">
             <div class="panel">
                 <div class="panel-body">
-                    <h3>Users</h3>
-                    <table class="table">
-                        <tr>
-                            <th>Name</th>
-                            <th>Slack id</th>
-                            <th>Required for gigs</th>
-                        </tr>
-                        {{#each settings.users}}
-                        <tr>
-                            <td>{{real_name}}</td>
-                            <td>{{name}}</td>
-                            <td>{{requiredForGigs}}</td>
-                        </tr>
-                        {{/each}}
-                    </table>
-                    <p>Required for gigs means this person will be asked whether they are available for new gigs.</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6">
-            <div class="panel">
-                <div class="panel-body">
-                    <h3>Links</h3>
                     <form class="form" action="/settings" method="post">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <label>Title</label>
-                            </div>
-                            <div class="col-md-6">
-                                <label>Url</label>
-                            </div>
+                        <div class="col-md-6">
+                            <h3>Users</h3>
+                            <table class="table">
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Slack id</th>
+                                    <th>Vragen naar beschikbaarheid*</th>
+                                </tr>
+                                {{#each settings.users}}
+                                <tr>
+                                    <td>{{real_name}}</td>
+                                    <td>{{name}}</td>
+                                    <td>
+                                        <div class="btn-group" data-toggle="buttons">
+                                            <label class="btn btn-default btn-sm {{#if requiredForGigs}}active{{/if}}">
+                                            <input type="radio" name="requiredForGigs_{{name}}" value="true" autocomplete="off" {{#if requiredForGigs}}checked{{/if}}> Ja
+                                            </label>
+                                            <label class="btn btn-default btn-sm {{#unless requiredForGigs}}active{{/unless}}">
+                                            <input type="radio" name="requiredForGigs_{{name}}" value="false" autocomplete="off" {{#unless requiredForGigs}}checked{{/unless}}> Nee
+                                            </label>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {{/each}}
+                            </table>
+                            <p>* Gigbot vraagt deze mensen of ze kunnen voor een optreden.</p>
                         </div>
-                        {{#each settings.links}}
-                        <div class="form-group row">
-                            <div class="col-md-6">
-                                <input class="form-control" type="text" name="link_title"/ placeholder="title" value="{{title}}" />
-                            </div>
-                            <div class="col-md-6">
-                                <input class="form-control" type="text" name="link_url" placeholder="url" value="{{url}}" />
-                            </div>
+                        <div class="col-md-6">
+                            <h3>Links</h3>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <label>Title</label>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label>Url</label>
+                                    </div>
+                                </div>
+                                {{#each settings.links}}
+                                <div class="form-group row">
+                                    <div class="col-md-6">
+                                        <input class="form-control" type="text" name="link_title"/ placeholder="title" value="{{title}}" />
+                                    </div>
+                                    <div class="col-md-6">
+                                        <input class="form-control" type="text" name="link_url" placeholder="url" value="{{url}}" />
+                                    </div>
+                                </div>
+                                {{/each}}
+                                <div class="form-group row">
+                                    <div class="col-md-12">
+                                        <label>Add a new link:</label>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <input class="form-control" type="text" name="link_title"/ placeholder="title">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <input class="form-control" type="text" name="link_url" placeholder="url" />
+                                    </div>
+                                </div>
+                                <div>
+                                </div>
                         </div>
-                        {{/each}}
-                        <div class="form-group row">
-                            <div class="col-md-12">
-                                <label>Add a new link:</label>
-                            </div>
-                            <div class="col-md-6">
-                                <input class="form-control" type="text" name="link_title"/ placeholder="title">
-                            </div>
-                            <div class="col-md-6">
-                                <input class="form-control" type="text" name="link_url" placeholder="url" />
-                            </div>
-                        </div>
-                        <div>
-                            <input class="btn btn-default" type="submit" value="Save"/>
+                        <div class="col-md-12">
+                            <input class="btn btn-default pull-right" type="submit" value="Save"/>
                         </div>
                     </form>
                 </div>

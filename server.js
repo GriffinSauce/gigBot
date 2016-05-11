@@ -117,6 +117,14 @@ app.post('/settings', function (req, res) {
             }
         }
 
+        // User settings
+        updatedSettings.users = _.map(updatedSettings.users, function(user, index){
+            console.log(input['requiredForGigs_'+user.name]);
+            user.requiredForGigs = input['requiredForGigs_'+user.name]==='true';
+            return user;
+        });
+        console.dir(updatedSettings.users);
+
         // Save props
         updatedSettings.links = links;
         updatedSettings.save(function(err){

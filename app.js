@@ -36,7 +36,7 @@ async.waterfall([
     function(slackUsers, cb){
         Settings.findOne({}, function(err, settings){
             if(settings.users && !_.isEmpty(settings.users)) {
-                //return cb();
+                return cb();
             }
             settings.users = slackUsers;
             settings.save(function(err){
