@@ -57,6 +57,7 @@ async.waterfall([
     },
     function updateUsers(slackUsers, cb){
         Settings.findOne({}, function(err, settings){
+            settings = settings || new Settings({});
             if(settings.users && !_.isEmpty(settings.users)) {
                 global.gigbot.settings = settings.toObject();
                 return cb();
