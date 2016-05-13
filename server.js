@@ -18,7 +18,6 @@ var handlebarsHelpers = require('./lib/handlebarsHelpers');
 var passport = require('./lib/passport');
 
 // Services
-var dataService = require('./services/data');
 var messageService = require('./services/messages');
 
 // Schemas
@@ -80,7 +79,7 @@ app.get('/', function (req, res) {
 
 // Status
 app.get('/status', function (req, res) {
-    dataService.getGigs(function(err, gigs){
+    Gig.find({}, function(err, gigs){
         res.render('status', {
             page: 'status',
             gigs: gigs,

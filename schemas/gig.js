@@ -76,7 +76,14 @@ schema.pre('save', function(next) {
     next();
 });
 
-module.exports = mongoose.model('Gig', schema);
+schema.index({
+    'venue.name': 'text',
+    'venue.address': 'text',
+    'times': 'text',
+    'backline': 'text',
+    'comments': 'text',
+    "$**": "text"
+});
 
 function cleanBreaks(string) {
     return string && string.replace ? string.replace(/(\r\n)/gm, '\n') : string;
@@ -84,3 +91,5 @@ function cleanBreaks(string) {
 function stripEndWhitespace(string) {
     return string && string.replace ? string.replace(/\s$/, '') : string;
 }
+
+module.exports = mongoose.model('Gig', schema);

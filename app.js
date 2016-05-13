@@ -11,20 +11,42 @@ global.gigbot.ipaddress = process.env.OPENSHIFT_NODEJS_IP || "127.0.0.1";
 var _ = require("lodash");
 var async = require("async");
 var fs = require('fs');
+var mongoose = require('mongoose');
 
 // Server and services
 var server = require('./server');
 var messageService = require('./services/messages');
-var dataService = require('./services/data');
 
 // Schemas
 var Settings = require('./schemas/settings.js');
+var Gig = require('./schemas/gig.js');
 
 // Libs
 var slack = require('./lib/slack');
 
 async.waterfall([
-    dataService.init,
+    function connectDb(cb) {
+        if(config.env == 'local')
+        {
+            mongoose.connect('mongodb://' + global.gigbot.ipaddress + '/gigbot');
+        } else
+        {
+            var dbconnectionURL = 'mongodb://';
+                dbconnectionURL += process.env.MONGODB_USER + ':';
+                dbconnectionURL += process.env.MONGODB_PASS + '@';
+                dbconnectionURL += process.env.OPENSHIFT_MONGODB_DB_HOST + ':';
+                dbconnectionURL += process.env.OPENSHIFT_MONGODB_DB_PORT + '/';
+                dbconnectionURL += process.env.MONGODB_DB;
+            mongoose.connect(dbconnectionURL);
+        }
+
+        var db = mongoose.connection;
+        db.on('error', console.error.bind(console, 'connection error:'));
+        db.once('open', function callback() {
+            console.log('Connected to the database');
+            cb();
+        });
+    },
     function initializeMessages(cb){
         messageService.init(function(err, slackUsers){
             slackUsers = _.reject(slackUsers, { id:'USLACKBOT' });
@@ -68,7 +90,7 @@ function registerTriggers(cb){
 
     // Reply to any message containing "list gigs"
     messageService.listenFor('list gigs', 'List all gigs', function(message){
-        dataService.getGigs(function(err, gigs){
+        Gig.find({}, function(err, gigs){
             var text = "*All gigs:*\n";
             gigs = _.map(gigs, slack.renderGigToSlackAttachment);
             messageService.send({
@@ -79,9 +101,11 @@ function registerTriggers(cb){
         });
     });
 
+
     // Reply to any message containing "next gig"
     messageService.listenFor('next gig', 'Show the first upcoming gig', function(message){
-        dataService.getNextGig(function(err, gig){
+        Gig.find().sort({date: 1}).exec(function(err, gigs){
+            var nextGig = _.first(gigs);
             var text = "*Next upcoming gig:*\n";
             gig = slack.renderGigToSlackAttachment(gig);
             messageService.send({
@@ -95,7 +119,11 @@ function registerTriggers(cb){
     // Reply to any message containing "next gig"
     messageService.listenFor('find', 'Find a gig, use "find delft" to find any gigs containing the text "delft"', function(message){
         var query = message.text.split('find ')[1];
-        dataService.search(query, function(err, results){
+        Gig.find({
+            $text: { $search: query }
+        },{
+            score: { $meta: "textScore" }
+        }).sort({ score : { $meta : 'textScore' } }).exec(function(err, results){
             if(results.length === 0) {
                 return messageService.send({
                     "channel": message.channel,
@@ -114,7 +142,11 @@ function registerTriggers(cb){
     // Return navigation links
     messageService.listenFor('navigate to', 'Find a gig (just like "find") and show a Google Maps link', function(message){
         var query = message.text.split('navigate to ')[1];
-        dataService.search(query, function(err, results){
+        Gig.find({
+            $text: { $search: query }
+        },{
+            score: { $meta: "textScore" }
+        }).sort({ score : { $meta : 'textScore' } }).exec(function(err, results){
             if(results.length === 0) {
                 return messageService.send({
                     "channel": message.channel,
