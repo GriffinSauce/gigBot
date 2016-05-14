@@ -31,13 +31,7 @@ async.waterfall([
             mongoose.connect('mongodb://' + global.gigbot.ipaddress + '/gigbot');
         } else
         {
-            var dbconnectionURL = 'mongodb://';
-                dbconnectionURL += process.env.MONGODB_USER + ':';
-                dbconnectionURL += process.env.MONGODB_PASS + '@';
-                dbconnectionURL += process.env.OPENSHIFT_MONGODB_DB_HOST + ':';
-                dbconnectionURL += process.env.OPENSHIFT_MONGODB_DB_PORT + '/';
-                dbconnectionURL += process.env.MONGODB_DB;
-            mongoose.connect(dbconnectionURL);
+            mongoose.connect(process.env.MONGODB_URL);
         }
 
         var db = mongoose.connection;
@@ -123,7 +117,7 @@ function registerTriggers(cb){
         },{
             score: { $meta: "textScore" }
         }).sort({ score : { $meta : 'textScore' } }).exec(function(err, results){
-            if(results.length === 0) {
+            if(!results || results.length === 0) {
                 return messageService.send({
                     "channel": message.channel,
                     "text": 'Sorry, didn\'t find anything :('
