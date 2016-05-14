@@ -87,7 +87,9 @@ module.exports.init = function(done) {
                 cb();
             });
         }
-    ], done);
+    ], function(err, results){
+        done(err, results && results[0]);
+    });
 };
 
 // Allow for triggers to be added

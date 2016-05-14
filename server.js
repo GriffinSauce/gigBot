@@ -87,7 +87,6 @@ app.get('/settings', function (req, res) {
             Settings.findOne(cb);
         }
     }, function(err, results){
-        console.log(arguments);
         res.render('settings', {
             page: 'settings',
             settings: results.settings,

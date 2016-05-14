@@ -6,6 +6,7 @@ var Schema = mongoose.Schema;
 var schema = new Schema(
 {
     users: [{
+        _id: false,
         requiredForGigs: {
             type: Boolean,
             default: true
