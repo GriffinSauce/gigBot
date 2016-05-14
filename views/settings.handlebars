@@ -34,22 +34,14 @@
                             </table>
                             <p>* Gigbot vraagt deze mensen of ze kunnen voor een optreden.</p>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-3 col-md-push-3 settings-links">
                             <h3>Links</h3>
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <label>Title</label>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label>Url</label>
-                                    </div>
-                                </div>
                                 {{#each settings.links}}
                                 <div class="form-group row">
-                                    <div class="col-md-6">
+                                    <div class="col-md-12">
                                         <input class="form-control" type="text" name="link_title"/ placeholder="title" value="{{title}}" />
                                     </div>
-                                    <div class="col-md-6">
+                                    <div class="col-md-12">
                                         <input class="form-control" type="text" name="link_url" placeholder="url" value="{{url}}" />
                                     </div>
                                 </div>
@@ -58,10 +50,10 @@
                                     <div class="col-md-12">
                                         <label>Add a new link:</label>
                                     </div>
-                                    <div class="col-md-6">
+                                    <div class="col-md-12">
                                         <input class="form-control" type="text" name="link_title"/ placeholder="title">
                                     </div>
-                                    <div class="col-md-6">
+                                    <div class="col-md-12">
                                         <input class="form-control" type="text" name="link_url" placeholder="url" />
                                     </div>
                                 </div>
@@ -76,4 +68,36 @@
             </div>
         </div>
     </div>
+    <div class="row">
+        <div class="col-md-12">
+            <h2>GigBot status</h2>
+        </div>
+        <div class="col-md-6">
+            <div class="panel">
+                <div class="panel-body">
+                    <div>Status: online</div>
+
+                    {{#if gigs}}
+                    <div>Loaded {{gigs.length}} gigs</div>
+                    {{/if}}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="panel">
+                <div class="panel-body">
+                Registered triggers:
+                {{#each triggers}}
+                <ul>
+                    <li>
+                        <b>{{@key}}: </b>
+                        <span>{{description}}</span>
+                    </li>
+                </ul>
+                {{/each}}
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+

@@ -36,8 +36,9 @@ module.exports.init = function(done) {
         function startRTMSession(cb){
             needle.get("https://slack.com/api/rtm.start?token="+config.token, function(err, response){
                 if(err || !response.body.ok) {
-                    console.error('Some kinda error', _.get(response,'body'));
-                    return console.error(err);
+                    console.error('Starting RTM session failed', _.get(response,'body'));
+                    console.error(err);
+                    return cb(err);
                 }
                 team = response.body;
                 gigbot = team.self;

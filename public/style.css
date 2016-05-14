@@ -109,6 +109,21 @@ hr {
     text-transform: capitalize;
 }
 
+
+/*
+ * Settings
+ */
+.settings-links input[name=link_title] {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+}
+.settings-links input[name=link_url] {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    border-top: none;
+}
+
+
 /*
  * Parsley
  */

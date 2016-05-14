@@ -77,23 +77,22 @@ app.get('/', function (req, res) {
     res.redirect('/gigs');
 });
 
-// Status
-app.get('/status', function (req, res) {
-    Gig.find({}, function(err, gigs){
-        res.render('status', {
-            page: 'status',
-            gigs: gigs,
-            triggers: messageService.triggers
-        });
-    });
-});
-
 // Settings
 app.get('/settings', function (req, res) {
-    Settings.findOne({}, function(err, settings){
+    async.parallel({
+        gigs: function(cb) {
+            Gig.find(cb);
+        },
+        settings: function(cb) {
+            Settings.findOne(cb);
+        }
+    }, function(err, results){
+        console.log(arguments);
         res.render('settings', {
             page: 'settings',
-            settings: settings
+            settings: results.settings,
+            gigs: results.gigs,
+            triggers: messageService.triggers
         });
     });
 });
@@ -117,10 +116,11 @@ app.post('/settings', function (req, res) {
                 });
             }
         }
+        console.log(links);
 
         // User settings
         updatedSettings.users = _.map(updatedSettings.users, function(user, index){
-            console.log(input['requiredForGigs_'+user.name]);
+            console.log(user.name+': '+input['requiredForGigs_'+user.name]);
             user.requiredForGigs = input['requiredForGigs_'+user.name]==='true';
             return user;
         });

@@ -45,6 +45,7 @@ var schema = new Schema(
         // /slack properties
     }],
     links: [{
+        _id: false,
         title: {
             type: String
         },
