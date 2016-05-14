@@ -31,7 +31,7 @@ async.waterfall([
             mongoose.connect('mongodb://' + global.gigbot.ipaddress + '/gigbot');
         } else
         {
-            mongoose.connect(process.env.MONGODB_URL);
+            mongoose.connect(process.env.MONGODB_URL + 'gigbot', { db: { nativeParser: true } });
         }
 
         var db = mongoose.connection;
