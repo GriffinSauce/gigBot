@@ -83,7 +83,7 @@ function registerTriggers(cb){
 
     // Reply to any message containing "list gigs"
     messageService.listenFor('list gigs', 'List all gigs', function(message){
-        Gig.find({}, function(err, gigs){
+        Gig.find().sort({date:1}).exec(function(err, gigs){
             var text = "*All gigs:*\n";
             gigs = _.map(gigs, slack.renderGigToSlackAttachment);
             messageService.send({

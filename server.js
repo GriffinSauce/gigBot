@@ -137,10 +137,10 @@ app.post('/settings', function (req, res) {
 app.get('/gigs', function (req, res) {
     async.series({
         settings: function(cb) {
-            Settings.findOne({}, cb);
+            Settings.findOne(cb);
         },
         gigs: function(cb) {
-            Gig.find({}, cb);
+            Gig.find().sort({date:1}).exec(cb);
         }
     },function(err, results){
         var usersToAsk = _.filter(global.gigbot.settings.users, {
