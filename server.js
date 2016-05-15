@@ -110,20 +110,19 @@ app.get('/gigs', function (req, res) {
             Gig.find().sort({date:1}).exec(cb);
         }
     },function(err, results){
+
+        // Add any to-be-asked users that weren't active at creation
         var usersToAsk = _.filter(global.gigbot.settings.users, {
             requiredForGigs: true
         });
         var defaultAvailability = _.map(usersToAsk, function(user){
-            return {
-                user: user.name,
-                available: req.body['availability.'+user.name]
-            };
+            return { user: user.name, available: 'unknown' };
         });
         results.gigs = _.map(results.gigs, function(gig){
             gig = gig.toObject();
-            if(_.isEmpty(gig.availability)) {
-                gig.availability = defaultAvailability;
-            }
+            gig.availability = _.map(defaultAvailability, function(status){
+                return _.find(gig.availability, {user:status.user}) || status;
+            });
             return gig;
         });
         res.render('gigs', _.extend({
