@@ -38,7 +38,8 @@ $(document).ready(function(){
             }).done(function(data){
                 location.reload();
             }).fail(function(data){
-                alert('Shit\'s broken yo');
+                var error = data && data.responseJSON && data.responseJSON.error;
+                alert('Shit\'s broken yo, error: '+error);
             });
         }
     });
@@ -56,7 +57,28 @@ $(document).ready(function(){
             }).done(function(data){
                 location.reload();
             }).fail(function(data){
-                alert('Shit\'s broken yo');
+                console.log(arguments);
+                var error = data && data.responseJSON && data.responseJSON.error;
+                alert('Shit\'s broken yo, error: '+error);
+            });
+        }
+    });
+
+    // Cancel request btns
+    $('.gig .btn-request-cancel').click(function(){
+        var id = $(this).data('id');
+        if(!id) {
+            return alert('Shit\'s broken yo');
+        }
+        if(confirm('Weet je het zeker?')) {
+            $.ajax({
+                url: '/gigs/'+id+'/request/cancel',
+                method: 'DELETE'
+            }).done(function(data){
+                location.reload();
+            }).fail(function(data){
+                var error = data && data.responseJSON && data.responseJSON.error;
+                alert('Shit\'s broken yo, error: '+error);
             });
         }
     });

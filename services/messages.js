@@ -222,6 +222,23 @@ module.exports.askForAvailability = function(userName, gig){
     ]);
 };
 
+module.exports.sendNeverMind = function(userName, gig){
+    var user = _.find(users, {name: userName});
+    if(!user) {
+        return;
+    }
+    async.series([
+        function(){
+            var channel = _.find(imChannels, {user:user.id});
+            send({
+                im: true,
+                channel: channel.id,
+                text: 'Hey, nevermind about *'+gig.venue.name+'*, for some reason I don\'t care anymore'
+            });
+        }
+    ]);
+};
+
 function handleIm(message){
     console.log('Handling IM', message);
     var user = _.find(global.gigbot.settings.users, {

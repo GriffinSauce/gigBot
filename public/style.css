@@ -46,13 +46,15 @@ body {
     top: 5px;
     right: 5px;
 }
-.gig .availability .icon-unknown {
+
+/* Availability icons */
+.availability .icon-unknown {
     color: #CCC;
 }
-.gig .availability .icon-no {
+.availability .icon-no {
     color: #FF0000;
 }
-.gig .availability .icon-yes {
+.availability .icon-yes {
     color: #65d865;
 }
 
@@ -108,7 +110,6 @@ hr {
     margin-bottom: 7px;
     text-transform: capitalize;
 }
-
 
 /*
  * Settings

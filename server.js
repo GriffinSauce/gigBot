@@ -18,6 +18,7 @@ var passport = require('./lib/passport');
 // Services
 var messageService = require('./services/messages');
 var settingsService = require('./services/settings');
+var gigsService = require('./services/gigs');
 
 // Schemas
 var Gig = require('./schemas/gig.js');
@@ -102,34 +103,9 @@ app.post('/settings', function (req, res) {
 
 // Gigs admin
 app.get('/gigs', function (req, res) {
-    async.series({
-        settings: function(cb) {
-            Settings.findOne(cb);
-        },
-        gigs: function(cb) {
-            Gig.find().sort({date:1}).exec(cb);
-        }
-    },function(err, results){
-
-        // Add any to-be-asked users that weren't active at creation
-        var usersToAsk = _.filter(global.gigbot.settings.users, {
-            requiredForGigs: true
-        });
-        var defaultAvailability = _.map(usersToAsk, function(user){
-            return { user: user.name, available: 'unknown' };
-        });
-        results.gigs = _.map(results.gigs, function(gig){
-            gig = gig.toObject();
-            gig.availability = _.map(defaultAvailability, function(status){
-                return _.find(gig.availability, {user:status.user}) || status;
-            });
-            return gig;
-        });
+    gigsService.getAll(function(err, results){
         res.render('gigs', _.extend({
-            page: 'gigs',
-            gig: {
-                availability: defaultAvailability
-            }
+            page: 'gigs'
         }, results));
     });
 });
@@ -211,48 +187,23 @@ app.delete('/gigs/:id', function (req, res) {
 
 // Request availability
 app.post('/gigs/:id/request', function (req, res) {
-
-    async.series([
-
-        // Check for ongoing requests to prevent race condition
-        function preventConfusion(cb) {
-            Gig.find({'request.active': true}, function(err, gigs){
-                if(gigs.length !== 0) {
-                    //return cb('alreadyRunningRequest');
-                }
-                cb(err);
-            });
-        },
-
-        // Start the request
-        function startRequest(cb) {
-            Gig.findOne({_id:req.params.id}, function(err, gig){
-                if(err) {
-                    return res.sendStatus(500);
-                }
-                if(!gig) {
-                    return res.sendStatus(404);
-                }
-
-                // Only ask users that are required
-                var usersToAsk = _.filter(global.gigbot.settings.users, {
-                    requiredForGigs: true
-                });
-                _.each(usersToAsk, function(user){
-                    messageService.askForAvailability(user.name, gig);
-                });
-
-                // Register started request
-                gig.request = {
-                    started: moment(),
-                    active: true
-                };
-                gig.save(cb);
+    gigsService.askForAvailability(req.params.id, function(err){
+        if(err) {
+            return res.status(500).json({
+                error: err
             });
         }
-    ], function(err){
-        if(err === 'alreadyRunningRequest') {
-            // Show error
+        res.sendStatus(200);
+    });
+});
+
+// Cancel ongoing request
+app.delete('/gigs/:id/request/cancel', function (req, res) {
+    gigsService.stopAsking(req.params.id, function(err){
+        if(err) {
+            return res.status(500).json({
+                error: err
+            });
         }
         res.sendStatus(200);
     });

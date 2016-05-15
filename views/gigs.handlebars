@@ -19,15 +19,17 @@
                     </div>
                     <div class="availability">
                         {{#each availability}}
+                            <span title="{{user}}"
                             {{#ifCond available '===' 'unknown'}}
-                            <span class="icon-unknown glyphicon glyphicon-question-sign"></span>
+                                class="icon-unknown glyphicon glyphicon-question-sign"
                             {{/ifCond}}
                             {{#ifCond available '===' 'no'}}
-                            <span class="icon-no glyphicon glyphicon-minus-sign"></span>
+                                class="icon-no glyphicon glyphicon-minus-sign"
                             {{/ifCond}}
                             {{#ifCond available '===' 'yes'}}
-                            <span class="icon-yes glyphicon glyphicon-ok"></span>
+                                class="icon-yes glyphicon glyphicon-ok"
                             {{/ifCond}}
+                            ></span>
                         {{/each}}
                     </div>
                 </div>
@@ -58,6 +60,11 @@
                         <div class="col-md-6">
                             <div class="chevron"><span class="glyphicon glyphicon-chevron-down"></span></div>
                         </div>
+                        {{#if request.active}}
+                        <div class="col-md-12">
+                            <button class="btn pull-right btn-sm btn-danger btn-request-cancel" data-id="{{_id}}">Stoppen met vragen</button>
+                        </div>
+                        {{else}}
                         <div class="col-md-6 edit-buttons">
                             <button class="btn pull-right btn-sm btn-danger btn-delete" data-id="{{_id}}">Verwijderen</button>
                             <button class="btn pull-right btn-sm btn-default" data-toggle="modal" data-target="#editModal_{{_id}}">Aanpassen</button>
@@ -67,6 +74,7 @@
                         <div class="col-md-12">
                             <button class="btn pull-right btn-sm btn-default btn-request" data-id="{{_id}}">Vraag beschikbaarheid</button>
                         </div>
+                        {{/if}}
                     </div>
                 </div>
             </div>
