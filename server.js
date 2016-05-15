@@ -1,4 +1,3 @@
-var config = require('./loadConfig');
 
 // Modules
 var mongoose = require('mongoose');
@@ -9,7 +8,6 @@ var session = require('express-session');
 var MongoStore = require('connect-mongo/es5')(session);
 var bodyParser = require('body-parser');
 var _ = require('lodash');
-var fs = require('fs');
 var moment = require('moment');
 moment.locale('nl_NL');
 
@@ -19,6 +17,7 @@ var passport = require('./lib/passport');
 
 // Services
 var messageService = require('./services/messages');
+var settingsService = require('./services/settings');
 
 // Schemas
 var Gig = require('./schemas/gig.js');
@@ -96,40 +95,8 @@ app.get('/settings', function (req, res) {
     });
 });
 app.post('/settings', function (req, res) {
-    var input = req.body;
-    Settings.findOne({}, function(err, settings){
-        var updatedSettings = settings;
-        if(!settings) {
-            updatedSettings = new Settings();
-        }
-
-        // Rewrite links input
-        var links = [];
-        input.link_title = typeof input.link_title === 'string' ? [input.link_title] : input.link_title;
-        input.link_url = typeof input.link_url === 'string' ? [input.link_url] : input.link_url;
-        for(var i=0; i<input.link_title.length; i++) {
-            if(input.link_title[i] || input.link_url[i]) {
-                links.push({
-                    title: input.link_title[i],
-                    url: input.link_url[i]
-                });
-            }
-        }
-        console.log(links);
-
-        // User settings
-        updatedSettings.users = _.map(updatedSettings.users, function(user, index){
-            console.log(user.name+': '+input['requiredForGigs_'+user.name]);
-            user.requiredForGigs = input['requiredForGigs_'+user.name]==='true';
-            return user;
-        });
-
-        // Save props
-        updatedSettings.links = links;
-        global.gigbot.settings = updatedSettings.toObject();
-        updatedSettings.save(function(err){
-            res.redirect('/settings');
-        });
+    settingsService.updateSettings(req.body, function(err){
+        res.redirect('/settings');
     });
 });
 
