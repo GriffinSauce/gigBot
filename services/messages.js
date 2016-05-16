@@ -272,7 +272,6 @@ function handleIm(message){
         var gig = gigs[0];
         var localeAnswer = answer === 'yes' ? 'ja' : 'nee';
         var updateText = 'Update over *'+gig.venue.name+'* op '+moment(gig.date).format('D MMMM YYYY');
-        var complete = true;
         gig.availability = _.map(gig.availability, function(status){
             if(status.user === user.name) {
                 status.available = answer;
@@ -287,15 +286,14 @@ function handleIm(message){
                 break;
             }
             updateText += '\n'+icon+' '+status.user;
-            if(status.available === 'unknown') {
-                complete = false;
-            }
             return status;
         });
 
-        if(complete){
+        // Everyone answered? Done!
+        if(!_.find(gig.availability, { available:'unknown' })){
             gig.request.active = false;
-            gig.request.complete = moment();
+            gig.request.completed = moment();
+            console.log('Request done!', gig.toObject());
         }
 
         gig.save(function(){
