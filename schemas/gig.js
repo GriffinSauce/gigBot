@@ -46,6 +46,9 @@ var schema = new Schema(
         started: {
             type: Date
         },
+        completed: {
+            type: Date
+        },
         active: {
             type: Boolean
         }
