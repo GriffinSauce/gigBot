@@ -71,11 +71,16 @@ module.exports.askForAvailability = function(gigId, done){
                     return cb('gigNotFound');
                 }
 
-                // Only ask users that are required
+                // Only ask users that are required, reset availability
+                gig.availability = [];
                 var usersToAsk = _.filter(global.gigbot.settings.users, {
                     requiredForGigs: true
                 });
                 _.each(usersToAsk, function(user){
+                    gig.availability.push({
+                        user: user.name,
+                        availability: 'unknown'
+                    });
                     messageService.askForAvailability(user.name, gig);
                 });
 

@@ -28,7 +28,6 @@ var team = {};
 var users = {};
 var triggers = module.exports.triggers = {};
 var imChannels = [];
-var requests = [];
 
 // Initialise message service and bind listeners
 module.exports.init = function(done) {
@@ -206,17 +205,10 @@ module.exports.askForAvailability = function(userName, gig){
         function(){
             console.log('Started convo with', userName);
             var channel = _.find(imChannels, {user:user.id});
-            requests.push({
-                user: user.id,
-                gig: gig.id,
-                channel: channel.id,
-                answer: 'unknown'
-            });
-            console.log('ongoing requests', requests);
             send({
                 im: true,
                 channel: channel.id,
-                text: 'Hey, are you available for a gig on '+moment(gig.date).format('D MMMM YYYY')+'?'+' ('+gig.venue.name+')'
+                text: 'Hey, ben je beschikbaar voor een gig op *'+moment(gig.date).format('D MMMM YYYY')+'*?'+' ('+gig.venue.name+')'
             });
         }
     ]);
@@ -233,7 +225,7 @@ module.exports.sendNeverMind = function(userName, gig){
             send({
                 im: true,
                 channel: channel.id,
-                text: 'Hey, nevermind about *'+gig.venue.name+'*, for some reason I don\'t care anymore'
+                text: 'Hey, weet je nog wat ik vroeg over *'+moment(gig.date).format('D MMMM YYYY')+'*? Laat maar zitten! :sweat_smile:'
             });
         }
     ]);
@@ -244,7 +236,6 @@ function handleIm(message){
     var user = _.find(global.gigbot.settings.users, {
         id: message.user
     });
-    //var request = _.find(requests, {user: message.user, answer: 'unknown'});
 
     var q = {
         'request.active': true,
@@ -260,14 +251,14 @@ function handleIm(message){
             return send({
                 im: true,
                 channel: message.channel,
-                text: 'Sorry, I don\'t know what you\'re talking about...'
+                text: 'Sorry, ik weet niet waar je het over hebt...'
             });
         }
         if(gigs.length > 1){
             return send({
                 im: true,
                 channel: message.channel,
-                text: 'Sorry, I\'m confused, please tell the admin!'
+                text: 'Sorry, ik ben in de war, vertel het aan Joris!'
             });
         }
         var answer = parseAnswer(message.text);
@@ -275,21 +266,37 @@ function handleIm(message){
             return send({
                 im: true,
                 channel: message.channel,
-                text: 'Didn\'t get that, please answer with a "yes" or "no"'
+                text: 'Ik snap het niet, geef alsjeblieft antwoord met "ja" of "nee"'
             });
         }
         var gig = gigs[0];
+        var localeAnswer = answer === 'yes' ? 'ja' : 'nee';
+        var updateText = 'Update over *'+gig.venue.name+'* op '+moment(gig.date).format('D MMMM YYYY');
         gig.availability = _.map(gig.availability, function(status){
             if(status.user === user.name) {
                 status.available = answer;
             }
+            var icon;
+            switch(status.available) {
+                case 'yes': icon = ':white_check_mark:';
+                break;
+                case 'no': icon = ':x:';
+                break;
+                default: icon = ':grey_question:';
+                break;
+            }
+            updateText += '\n'+icon+' '+status.user;
             return status;
         });
         gig.save(function(){
+            send({
+                channel: _.find(team.channels, {name: 'gigs'}),
+                text: updateText
+            });
             return send({
                 im: true,
                 channel: message.channel,
-                text: 'Ok, I think you said *'+answer+'*, thanks!'
+                text: 'Ok, ik denk dat je *'+localeAnswer+'* zei, thanks!'
             });
         });
     });
