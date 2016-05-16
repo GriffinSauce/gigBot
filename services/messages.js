@@ -290,7 +290,7 @@ function handleIm(message){
         });
         gig.save(function(){
             send({
-                channel: _.find(team.channels, {name: 'gigs'}),
+                channel: _.get(_.find(team.channels, {name: 'gigs'}), 'id'),
                 text: updateText
             });
             return send({
