@@ -150,6 +150,7 @@ app.post('/gigs/:id', function (req, res) {
 
         // Crudest update ever
         var date = moment(req.body.date, 'D MMM YYYY');
+        var sameDate = date.isSame(gig.date, 'year') && date.isSame(gig.date, 'month') && date.isSame(gig.date, 'day');
         gig.date = date;
         gig.times = req.body.times;
         gig.venue.name = req.body.venue_name;
@@ -167,6 +168,12 @@ app.post('/gigs/:id', function (req, res) {
                 available: req.body['availability.'+user.name]
             };
         });
+
+        // Date changed? Unset request completion
+        if(!sameDate) {
+            gig.request.completed = null;
+        }
+
         console.dir(gig.toObject());
         gig.save(function(err){
             if(err) {
