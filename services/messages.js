@@ -310,21 +310,14 @@ function handleIm(message){
     });
 }
 
+var positiveReactions = ['yes', 'ja', 'joe', 'yep', 'yup'];
+var negativeReactions = ['no', 'nee'];
+var positiveReactionsRegexString = new RegExp(positiveReactions.join('|'), "gmi");
+var negativeReactionsRegexString = new RegExp(negativeReactions.join('|'), "gmi");
+
 function parseAnswer(text){
-    var positiveReactions = ['yes', 'ja'];
-    var negativeReactions = ['no', 'nee'];
-    var isPositive = false;
-    var isNegative = false;
-    _.map(positiveReactions, function(string){
-        if(text.indexOf(string) !== -1) {
-            isPositive = true;
-        }
-    });
-    _.map(negativeReactions, function(string){
-        if(text.indexOf(string) !== -1) {
-            isNegative = true;
-        }
-    });
+    var isPositive = text.match(positiveReactionsRegexString);
+    var isNegative = text.match(negativeReactionsRegexString);;
     if((!isPositive && !isNegative) || (isPositive && isNegative)){
         return 'unclear';
     }
