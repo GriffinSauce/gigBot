@@ -96,12 +96,17 @@ module.exports.init = function(done) {
 
 // Allow for triggers to be added
 module.exports.listenFor = listenFor;
-function listenFor(trigger, description, callback) {
+function listenFor(trigger, aliasses, description, callback) {
+    aliasses = aliasses || [];
+    aliasses.push(trigger);
+    var regexString = aliasses.join('|').replace(' ','\\s');
     triggers[trigger] = {
         description: description,
-        regex: new RegExp(trigger.replace(' ','\\s'), 'i'),
+        aliasses: aliasses,
+        regex: new RegExp(regexString, 'i'),
         callback: callback
     };
+    console.log('Registered', triggers[trigger].regex);
 }
 
 /* Send a message

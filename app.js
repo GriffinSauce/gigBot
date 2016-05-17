@@ -74,7 +74,7 @@ async.waterfall([
 function registerTriggers(cb){
 
     // Reply to any message containing "reply"
-    messageService.listenFor('reply', 'Just say something, anything', function(message){
+    messageService.listenFor('reply', ['reageer'], 'Just say something, anything', function(message){
         messageService.send({
             "channel": message.channel,
             "text": _.sample(['Hi!', 'Yo', 'What\'s up?', 'Whazaaaaah', 'Hey', 'Sup?'])
@@ -82,9 +82,9 @@ function registerTriggers(cb){
     });
 
     // Reply to any message containing "list gigs"
-    messageService.listenFor('list gigs', 'List all gigs', function(message){
+    messageService.listenFor('list gigs', ['lijst', 'alle optredens', 'alle gigs'], 'List all gigs', function(message){
         Gig.find().sort({date:1}).exec(function(err, gigs){
-            var text = "*All gigs:*\n";
+            var text = "*Alle gigs:*\n";
             gigs = _.map(gigs, slack.renderGigToSlackAttachment);
             messageService.send({
                 "channel": message.channel,
@@ -96,10 +96,10 @@ function registerTriggers(cb){
 
 
     // Reply to any message containing "next gig"
-    messageService.listenFor('next gig', 'Show the first upcoming gig', function(message){
+    messageService.listenFor('next gig', ['volgende gig', 'volgend optreden'], 'Show the first upcoming gig', function(message){
         Gig.find().sort({date: 1}).exec(function(err, gigs){
             var nextGig = _.first(gigs);
-            var text = "*Next upcoming gig:*\n";
+            var text = "*Volgende gig:*\n";
             nextGig = slack.renderGigToSlackAttachment(nextGig);
             messageService.send({
                 "channel": message.channel,
@@ -110,7 +110,7 @@ function registerTriggers(cb){
     });
 
     // Reply to any message containing "next gig"
-    messageService.listenFor('find', 'Find a gig, use "find delft" to find any gigs containing the text "delft"', function(message){
+    messageService.listenFor('find', [], 'Find a gig, use "find delft" to find any gigs containing the text "delft"', function(message){
         var query = message.text.split('find ')[1];
         Gig.find({
             $text: { $search: query }
@@ -133,7 +133,7 @@ function registerTriggers(cb){
     });
 
     // Return navigation links
-    messageService.listenFor('navigate to', 'Find a gig (just like "find") and show a Google Maps link', function(message){
+    messageService.listenFor('navigate to', [], 'Find a gig (just like "find") and show a Google Maps link', function(message){
         var query = message.text.split('navigate to ')[1];
         Gig.find({
             $text: { $search: query }
