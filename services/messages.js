@@ -176,7 +176,7 @@ function handleMessage(message) {
     }
 
     // Listen for triggers and call callback when found
-    var toGigbot = message.text && (message.text.indexOf(gigbot.name) !== -1 || message.text.indexOf('<@'+gigbot.id+'>') !== -1);
+    var toGigbot = message.text && message.text.match(new RegExp('<@'+gigbot.id+'>|'+gigbot.name, 'i'));
     if(message.type === 'message' && toGigbot) {
         var messageHandled = false;
         _.each(triggers, function(trigger, triggerText){
