@@ -99,6 +99,7 @@ module.exports.listenFor = listenFor;
 function listenFor(trigger, description, callback) {
     triggers[trigger] = {
         description: description,
+        regex: new RegExp(trigger.replace(' ','\\s'), 'i'),
         callback: callback
     };
 }
@@ -180,7 +181,9 @@ function handleMessage(message) {
     if(message.type === 'message' && toGigbot) {
         var messageHandled = false;
         _.each(triggers, function(trigger, triggerText){
-            if(message.text.indexOf(triggerText) !== -1) {
+            //if(message.text.indexOf(triggerText) !== -1) {
+            console.log(trigger.regex);
+            if(message.text.match(trigger.regex)) {
                 messageHandled = true;
                 trigger.callback(message);
             }
