@@ -75,7 +75,7 @@
         <div class="col-md-6">
             <div class="panel">
                 <div class="panel-body">
-                    <div>Status: online</div>
+                    <div>Slack status: {{#if global.slackConnected}}<span class="label label-success">connected</span>{{else}}<span class="label label-danger">not connected!</span>{{/if}}</div>
 
                     {{#if gigs}}
                     <div>Loaded {{gigs.length}} gigs</div>

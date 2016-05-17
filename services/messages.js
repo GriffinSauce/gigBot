@@ -87,6 +87,9 @@ module.exports.init = function(done) {
             });
         }
     ], function(err, results){
+        if(!err) {
+            global.gigbot.slackConnected = true;
+        }
         done(err, results && results[0]);
     });
 };

@@ -91,7 +91,8 @@ app.get('/settings', function (req, res) {
             page: 'settings',
             settings: results.settings,
             gigs: results.gigs,
-            triggers: messageService.triggers
+            triggers: messageService.triggers,
+            global: global.gigbot
         });
     });
 });
