@@ -100,11 +100,11 @@ function registerTriggers(cb){
         Gig.find().sort({date: 1}).exec(function(err, gigs){
             var nextGig = _.first(gigs);
             var text = "*Next upcoming gig:*\n";
-            gig = slack.renderGigToSlackAttachment(gig);
+            nextGig = slack.renderGigToSlackAttachment(nextGig);
             messageService.send({
                 "channel": message.channel,
                 "text": text,
-                "attachments": JSON.stringify([gig])
+                "attachments": JSON.stringify([nextGig])
             }, true);
         });
     });
