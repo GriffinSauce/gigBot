@@ -151,7 +151,12 @@ function send(data, useHook) {
 // Handle incoming messageService
 function handleMessage(message) {
     message = JSON.parse(message.utf8Data);
-    if(message.type === 'message' && config.logMessages.in) {
+    if(message.type !== 'message') {
+        return;
+    }
+
+    // Log incoming msgs
+    if(config.logMessages.in) {
         console.log("Received:", message);
     }else{
         console.log("Received message from "+_.get(_.find(users, {id:message.user}),'name'));
