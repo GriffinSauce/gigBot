@@ -34,34 +34,39 @@
                             </table>
                             <p>* Gigbot vraagt deze mensen of ze kunnen voor een optreden.</p>
                         </div>
-                        <div class="col-md-3 col-md-push-3 settings-links">
+                        <div class="col-md-3 settings-links">
                             <h3>Links</h3>
-                                {{#each settings.links}}
-                                <div class="form-group row">
-                                    <div class="col-md-12">
-                                        <input class="form-control" type="text" name="link_title"/ placeholder="title" value="{{title}}" />
-                                    </div>
-                                    <div class="col-md-12">
-                                        <input class="form-control" type="text" name="link_url" placeholder="url" value="{{url}}" />
-                                    </div>
+                            {{#each settings.links}}
+                            <div class="form-group row">
+                                <div class="col-md-12">
+                                    <input class="form-control" type="text" name="link_title"/ placeholder="title" value="{{title}}" />
                                 </div>
-                                {{/each}}
-                                <div class="form-group row">
-                                    <div class="col-md-12">
-                                        <label>Add a new link:</label>
-                                    </div>
-                                    <div class="col-md-12">
-                                        <input class="form-control" type="text" name="link_title"/ placeholder="title">
-                                    </div>
-                                    <div class="col-md-12">
-                                        <input class="form-control" type="text" name="link_url" placeholder="url" />
-                                    </div>
+                                <div class="col-md-12">
+                                    <input class="form-control" type="text" name="link_url" placeholder="url" value="{{url}}" />
                                 </div>
-                                <div>
+                            </div>
+                            {{/each}}
+                            <div class="form-group row">
+                                <div class="col-md-12">
+                                    <label>Nieuwe link toevoegen:</label>
                                 </div>
+                                <div class="col-md-12">
+                                    <input class="form-control" type="text" name="link_title"/ placeholder="title">
+                                </div>
+                                <div class="col-md-12">
+                                    <input class="form-control" type="text" name="link_url" placeholder="url" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 settings-integrations">
+                            <h3>Integrations</h3>
+                            <div class="form-group">
+                                <label>Slack token:</label>
+                                <input class="form-control" type="text" name="slackToken"/ placeholder="xxxx-xx-xxxxxx" value="{{settings.slackToken}}" />
+                            </div>
                         </div>
                         <div class="col-md-12">
-                            <input class="btn btn-default pull-right" type="submit" value="Save"/>
+                            <input class="btn btn-primary btn-lg pull-right" type="submit" value="Save"/>
                         </div>
                     </form>
                 </div>

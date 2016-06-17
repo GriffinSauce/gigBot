@@ -3,6 +3,7 @@ var _ = require('lodash');
 var Settings = require('../schemas/settings.js');
 
 module.exports.updateSettings = function(postData, done) {
+    console.log('Updating settings with input: ', postData);
 
     // Rewrite links input
     var input = postData;
@@ -31,6 +32,7 @@ module.exports.updateSettings = function(postData, done) {
             user.requiredForGigs = input['requiredForGigs_'+user.name]==='true';
             return user;
         });
+        updatedSettings.slackToken = postData.slackToken;
 
         // Save to db and global
         global.gigbot.settings = updatedSettings.toObject();

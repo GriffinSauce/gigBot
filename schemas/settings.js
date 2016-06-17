@@ -53,7 +53,10 @@ var schema = new Schema(
         url: {
             type: String
         }
-    }]
+    }],
+    slackToken: {
+        type: String
+    }
 });
 
 module.exports = mongoose.model('Settings', schema);

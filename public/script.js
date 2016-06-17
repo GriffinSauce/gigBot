@@ -1,3 +1,5 @@
+var slackTokenEditable = false;
+
 $(document).ready(function(){
 
     // Collapsing
@@ -81,5 +83,16 @@ $(document).ready(function(){
                 alert('Shit\'s broken yo, error: '+error);
             });
         }
+    });
+
+    // Be annoying when user tries to edit system-critical settings
+    $('input[name=slackToken]').click(function(e){
+        if(slackTokenEditable) {
+            return;
+        }
+        if(confirm("Weet je zeker dat je hiermee wilt kloten?")) {
+            return slackTokenEditable = true;
+        }
+        return $(this).blur();
     });
 });

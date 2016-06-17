@@ -14,11 +14,11 @@ var WebSocketClient = require('websocket').client;
 // Schemas
 var Gig = require('../schemas/gig.js');
 
-// Config
-var config = require('../loadConfig');
+// global.gigbot.config
 var slack = require('../lib/slack');
 
 // Vars
+var token;
 var connection;
 var messageIndex = 0;
 var connectionLive = false;
@@ -31,9 +31,10 @@ var imChannels = [];
 
 // Initialise message service and bind listeners
 module.exports.init = function(done) {
+    token = _.get(global, 'gigbot.settings.slackToken');
     async.series([
         function startRTMSession(cb){
-            needle.get("https://slack.com/api/rtm.start?token="+config.token, function(err, response){
+            needle.get("https://slack.com/api/rtm.start?token="+token, function(err, response){
                 if(err || !response.body.ok) {
                     console.error('Starting RTM session failed', _.get(response,'body'));
                     console.error(err);
@@ -79,7 +80,7 @@ module.exports.init = function(done) {
             if(!_.isEmpty(imChannels)){
                 cb();
             }
-            needle.get("https://slack.com/api/im.list?token="+config.token, function(err, response){
+            needle.get("https://slack.com/api/im.list?token="+token, function(err, response){
                 if(response.body.ok){
                     imChannels = response.body.ims;
                 }
@@ -119,19 +120,19 @@ module.exports.send = send;
 function send(data, useHook) {
     _.extend(data, {
         type: "message",
-        token: config.token,
+        token: token,
         as_user: true
     });
 
     // Redirect all coms to dev channel for development
-    if(config.env === 'local') {
+    if(global.gigbot.config.env === 'local') {
         data.text = '*[local]* '+data.text;
         if(!data.im) {
             data.channel = devChannel.id;
         }
     }
 
-    if(config.logMessages.out) {
+    if(global.gigbot.config.logMessages.out) {
         console.log("Sending:", data);
     }
 
@@ -156,7 +157,7 @@ function handleMessage(message) {
     }
 
     // Log incoming msgs
-    if(config.logMessages.in) {
+    if(message.type === 'message' && global.gigbot.config.logMessages.in) {
         console.log("Received:", message);
     }else{
         console.log("Received message from "+_.get(_.find(users, {id:message.user}),'name'));
@@ -171,11 +172,11 @@ function handleMessage(message) {
     }
 
     // Only handle devChannel on local
-    if(config.env === 'local' && message.channel !== devChannel.id) {
+    if(global.gigbot.config.env === 'local' && message.channel !== devChannel.id) {
         return;
     }
     // Ignore devchannel on prod
-    if(config.env === 'prod' && message.channel === devChannel.id) {
+    if(global.gigbot.config.env === 'prod' && message.channel === devChannel.id) {
         return;
     }
 

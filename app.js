@@ -3,9 +3,10 @@ console.log('Starting gigBot');
 // Globals
 var config = require('./loadConfig');
 global.gigbot = {
-    settings: {}
+    settings: {},
+    config: config,
+    ipaddress: process.env.OPENSHIFT_NODEJS_IP || "127.0.0.1"
 };
-global.gigbot.ipaddress = process.env.OPENSHIFT_NODEJS_IP || "127.0.0.1";
 
 // Modules
 var _ = require("lodash");
@@ -26,7 +27,7 @@ var slack = require('./lib/slack');
 
 async.waterfall([
     function connectDb(cb) {
-        if(config.env == 'local')
+        if(global.gigbot.config.env == 'local')
         {
             mongoose.connect('mongodb://' + global.gigbot.ipaddress + '/gigbot');
         } else
@@ -39,6 +40,12 @@ async.waterfall([
         db.once('open', function callback() {
             console.log('Connected to the database');
             cb();
+        });
+    },
+    function getSettings(cb){
+        Settings.findOne({}, function(err, settings){
+            global.gigbot.settings = settings.toObject();
+            return cb();
         });
     },
     function initializeMessages(cb){
