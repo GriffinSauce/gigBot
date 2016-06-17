@@ -143,9 +143,11 @@ app.post('/gigs', function (req, res) {
 app.post('/gigs/:id', function (req, res) {
     Gig.findOne({_id:req.params.id}, function(err, gig){
         if(err) {
+            console.error('Error updating gig '+req.params.id, err);
             return res.sendStatus(500);
         }
         if(!gig) {
+            console.error('Can\t find gig to be updated '+req.params.id);
             return res.sendStatus(404);
         }
 
@@ -163,21 +165,30 @@ app.post('/gigs/:id', function (req, res) {
         var usersToAsk = _.filter(global.gigbot.settings.users, {
             requiredForGigs: true
         });
-        gig.availability = _.map(usersToAsk, function(user){
+        var availabilityUpdated = false;
+        var updatedAvailability = _.map(usersToAsk, function(user){
+            if(req.body['availability.'+user.name]) {
+                availabilityUpdated = true;
+            }
             return {
                 user: user.name,
                 available: req.body['availability.'+user.name]
             };
         });
+        if(availabilityUpdated) {
+            gig.availability = updatedAvailability;
+        }
 
         // Date changed? Unset request completion
         if(!sameDate) {
             gig.request.completed = null;
         }
 
+        console.log('Saving updated gig '+req.params.id);
         console.dir(gig.toObject());
         gig.save(function(err){
             if(err) {
+                console.error('Error updating gig '+req.params.id, err);
                return res.sendStatus(500);
             }
 

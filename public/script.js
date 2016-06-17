@@ -17,7 +17,7 @@ $(document).ready(function(){
     });
 
     // Datepicker
-    $('.input-group.date').each(function(){
+    $('.input-group.date').not('.disabled').each(function(){
         var value = $(this).data('default');
         $(this).datetimepicker({
             allowInputToggle: true,

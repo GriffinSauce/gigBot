@@ -26,8 +26,13 @@
                         <div class="col-sm-6">
                             <div class="form-group">
                                 <label for="date">Datum</label>
-                                <div class='input-group date' data-default='{{dateToISO gig.date}}'>
-                                    <input name="date" type='text' class="form-control" placeholder="Datum" data-parsley-required/>
+                                <div class='input-group date {{#if gig.request.active}}disabled{{/if}}' data-default='{{dateToISO gig.date}}'>
+                                    {{#if gig.request.active}}
+                                        <input name="date-disabled" type='text' value="{{dateFormat gig.date 'D MMM YYYY'}}" class="form-control" disabled/>
+                                        <input name="date" type='hidden' value="{{dateToISO gig.date}}"/>
+                                    {{else}}
+                                        <input name="date" type='text' class="form-control" placeholder="Datum" data-parsley-required/>
+                                    {{/if}}
                                     <span class="input-group-addon">
                                         <span class="glyphicon glyphicon-calendar"></span>
                                     </span>
@@ -58,24 +63,28 @@
                             </div>
                         </div>
                         <div class="col-sm-6">
-                            <h6>Beschikbaarheid</h6>
-                            {{#each gig.availability}}
-                            <div class="availability-label">
-                                <label>{{user}}</label>
-                            </div>
-                            <div class="btn-group" data-toggle="buttons">
-                                <label class="btn btn-default {{#ifCond available '===' 'unknown'}}active{{/ifCond}}">
-                                    <input type="radio" name="availability.{{user}}" value="unknown" autocomplete="off" {{#ifCond available '===' 'unknown'}}checked{{/ifCond}}> Onbekend
-                                </label>
-                                <label class="btn btn-default {{#ifCond available '===' 'no'}}active{{/ifCond}}">
-                                <input type="radio" name="availability.{{user}}" value="no" autocomplete="off" {{#ifCond available '===' 'no'}}checked{{/ifCond}}> Nee
-                                </label>
-                                <label class="btn btn-default {{#ifCond available '===' 'yes'}}active{{/ifCond}}">
-                                <input type="radio" name="availability.{{user}}" value="yes" autocomplete="off" {{#ifCond available '===' 'yes'}}checked{{/ifCond}}> Ja
-                                </label>
-                            </div>
-                            <div class='clearfix'></div>
-                            {{/each}}
+                            {{#if gig.request.active}}
+                                <p class="text-muted">Gigbot is aan het rondvragen. Beschikbaarheid kan niet aangepast worden.</p>
+                            {{else}}
+                                <h6>Beschikbaarheid</h6>
+                                {{#each gig.availability}}
+                                <div class="availability-label">
+                                    <label>{{user}}</label>
+                                </div>
+                                <div class="btn-group" data-toggle="buttons">
+                                    <label class="btn btn-default {{#ifCond available '===' 'unknown'}}active{{/ifCond}}">
+                                        <input type="radio" name="availability.{{user}}" value="unknown" autocomplete="off" {{#ifCond available '===' 'unknown'}}checked{{/ifCond}}> Onbekend
+                                    </label>
+                                    <label class="btn btn-default {{#ifCond available '===' 'no'}}active{{/ifCond}}">
+                                    <input type="radio" name="availability.{{user}}" value="no" autocomplete="off" {{#ifCond available '===' 'no'}}checked{{/ifCond}}> Nee
+                                    </label>
+                                    <label class="btn btn-default {{#ifCond available '===' 'yes'}}active{{/ifCond}}">
+                                    <input type="radio" name="availability.{{user}}" value="yes" autocomplete="off" {{#ifCond available '===' 'yes'}}checked{{/ifCond}}> Ja
+                                    </label>
+                                </div>
+                                <div class='clearfix'></div>
+                                {{/each}}
+                            {{/if}}
                         </div>
                     </div>
                 </div>

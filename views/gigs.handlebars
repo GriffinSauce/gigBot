@@ -61,15 +61,15 @@
                             <div class="chevron"><span class="glyphicon glyphicon-chevron-down"></span></div>
                         </div>
                         {{#if request.active}}
-                        <div class="col-md-12">
+                        <div class="col-md-12 edit-buttons">
                             <button class="btn pull-right btn-sm btn-danger btn-request-cancel" data-id="{{_id}}">Stoppen met vragen</button>
+                            <button class="btn pull-right btn-sm btn-default" data-toggle="modal" data-target="#editModal_{{_id}}">Aanpassen</button>
                         </div>
                         {{else}}
                         <div class="col-md-6 edit-buttons">
                             <button class="btn pull-right btn-sm btn-danger btn-delete" data-id="{{_id}}">Verwijderen</button>
                             <button class="btn pull-right btn-sm btn-default" data-toggle="modal" data-target="#editModal_{{_id}}">Aanpassen</button>
                             <div class="clearfix"></div>
-                            {{> gigForm edit=true gig=@this}}
                         </div>
                         {{#ifNotSet request.completed}}
                         <div class="col-md-12">
@@ -77,6 +77,7 @@
                         </div>
                         {{/ifNotSet}}
                         {{/if}}
+                        {{> gigForm edit=true gig=@this}}
                     </div>
                 </div>
             </div>
