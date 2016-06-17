@@ -1,87 +1,35 @@
 {{> header}}
 
-<div class="container">
+<div class="container gigs">
     <div class="row">
         <div class="col-md-12">
             <h1>Gigs</h1>
         </div>
         <div class="col-md-9">
-            {{#each gigs}}
-            <div class="panel gig collapsed">
-                <div class="panel-heading">
-                    <h3 class="panel-title">{{dateFormat date 'D MMMM YYYY'}} - {{venue.name}}</h3>
-                    <div class="confirmed">
-                        {{#if confirmed}}
-                        <span class="label label-success">Bevestigd</span>
-                        {{else}}
-                        <span class="label label-warning">Nog niet bevestigd</span>
-                        {{/if}}
-                    </div>
-                    <div class="availability">
-                        {{#each availability}}
-                            <span title="{{user}}"
-                            {{#ifCond available '===' 'unknown'}}
-                                class="icon-unknown glyphicon glyphicon-question-sign"
-                            {{/ifCond}}
-                            {{#ifCond available '===' 'no'}}
-                                class="icon-no glyphicon glyphicon-minus-sign"
-                            {{/ifCond}}
-                            {{#ifCond available '===' 'yes'}}
-                                class="icon-yes glyphicon glyphicon-ok"
-                            {{/ifCond}}
-                            ></span>
-                        {{/each}}
-                    </div>
+            <!-- Nav tabs -->
+            <ul class="nav nav-pills" role="tablist">
+                <li role="presentation" class="active">
+                    <a href="#confirmed" aria-controls="confirmed" role="tab" data-toggle="pill">Bevestigd</a>
+                </li>
+                <li role="presentation">
+                    <a href="#options" aria-controls="options" role="tab" data-toggle="pill">Opties</a>
+                </li>
+            </ul>
+
+            <!-- Tab panes -->
+            <div class="tab-content">
+                <div role="tabpanel" class="tab-pane active" id="confirmed">
+                    {{#each confirmedGigs}}
+                        {{> gig}}
+                    {{/each}}
                 </div>
-                <div class="panel-body">
-                    <div class="row">
-                        <div class="col-sm-6">
-                            <h5>Adres</h5>
-                            <p>{{{whitespaceToBr venue.address}}}</p>
-                        </div>
-                        <div class="col-sm-6">
-                            <h5>Tijden</h5>
-                            <p>{{{whitespaceToBr times}}}</p>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-sm-6">
-                            <h5>Backline</h5>
-                            <p>{{{whitespaceToBr backline}}}</p>
-                        </div>
-                        <div class="col-sm-6">
-                            <h5>Opmerkingen</h5>
-                            <p>{{{whitespaceToBr comments}}}</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="panel-footer">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="chevron"><span class="glyphicon glyphicon-chevron-down"></span></div>
-                        </div>
-                        {{#if request.active}}
-                        <div class="col-md-12 edit-buttons">
-                            <button class="btn pull-right btn-sm btn-danger btn-request-cancel" data-id="{{_id}}">Stoppen met vragen</button>
-                            <button class="btn pull-right btn-sm btn-default" data-toggle="modal" data-target="#editModal_{{_id}}">Aanpassen</button>
-                        </div>
-                        {{else}}
-                        <div class="col-md-6 edit-buttons">
-                            <button class="btn pull-right btn-sm btn-danger btn-delete" data-id="{{_id}}">Verwijderen</button>
-                            <button class="btn pull-right btn-sm btn-default" data-toggle="modal" data-target="#editModal_{{_id}}">Aanpassen</button>
-                            <div class="clearfix"></div>
-                        </div>
-                        {{#ifNotSet request.completed}}
-                        <div class="col-md-12">
-                            <button class="btn pull-right btn-sm btn-default btn-request" data-id="{{_id}}">Vraag beschikbaarheid</button>
-                        </div>
-                        {{/ifNotSet}}
-                        {{/if}}
-                        {{> gigForm edit=true gig=@this}}
-                    </div>
+                <div role="tabpanel" class="tab-pane" id="options">
+                    {{#each optionGigs}}
+                        {{> gig}}
+                    {{/each}}
                 </div>
             </div>
-            {{/each}}
+
         </div>
         <div class="col-md-3 new-gig">
             <form class="form" role="search">

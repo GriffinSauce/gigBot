@@ -16,8 +16,15 @@ module.exports.getAll = function(done) {
         settings: function(cb) {
             Settings.findOne(cb);
         },
-        gigs: function(cb) {
-            Gig.find().sort({date:1}).exec(cb);
+        confirmedGigs: function(cb) {
+            Gig.find({
+                confirmed: true
+            }).sort({date:1}).exec(cb);
+        },
+        optionGigs: function(cb) {
+            Gig.find({
+                confirmed: {$ne: true}
+            }).sort({date:1}).exec(cb);
         },
         activeRequests: function(cb) {
             Gig.find({'request.active': true}, cb);

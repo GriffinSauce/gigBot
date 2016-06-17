@@ -2,6 +2,18 @@ var slackTokenEditable = false;
 
 $(document).ready(function(){
 
+    // Deeplinks to tabs
+    var hash = document.location.hash;
+    var prefix = "tab_";
+    if (hash) {
+        $('.nav-pills a[aria-controls='+hash.replace('#'+prefix,"")+']').tab('show');
+    };
+
+    // Change hash for page-reload
+    $('.nav-pills a').on('shown.bs.tab', function (e) {
+        window.location.hash = e.target.hash.replace("#", "#" + prefix);
+    });
+
     // Collapsing
     $('.gig').bind('click', function(e) {
         if($(e.target).closest('.btn, .modal').length === 0) {

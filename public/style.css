@@ -7,6 +7,9 @@ body {
 /*
  * Gigs
  */
+.gigs .nav {
+    margin-bottom: 15px;
+}
 .gig {
     position: relative;
 }
