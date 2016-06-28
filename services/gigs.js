@@ -48,6 +48,31 @@ module.exports.getAll = function(done) {
     });
 };
 
+module.exports.search = function(query, done){
+    async.waterfall([
+        function(cb){
+            Gig.find({
+                $text: { $search: query }
+            },{
+                score: { $meta: "textScore" }
+            }).sort({ score : { $meta : 'textScore' } }).exec(cb);
+        },
+        function(results, cb){
+            if(results && results.length >= 1) {
+                return cb(null, results);
+            }
+            var queryRegex = new RegExp(query, 'i');
+            Gig.find({
+                $or: [
+                    {'venue.name': queryRegex},
+                    {'venue.address': queryRegex},
+                    {'comments': queryRegex}
+                ]
+            }, cb);
+        }
+    ], done);
+}
+
 module.exports.askForAvailability = function(gigId, done){
     async.series([
 

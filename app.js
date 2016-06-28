@@ -17,6 +17,7 @@ var mongoose = require('mongoose');
 // Server and services
 var server = require('./server');
 var messageService = require('./services/messages');
+var gigsService = require('./services/gigs');
 
 // Schemas
 var Settings = require('./schemas/settings.js');
@@ -119,11 +120,7 @@ function registerTriggers(cb){
     // Reply to any message containing "next gig"
     messageService.listenFor('find', [], 'Find a gig, use "find delft" to find any gigs containing the text "delft"', function(message){
         var query = message.text.split('find ')[1];
-        Gig.find({
-            $text: { $search: query }
-        },{
-            score: { $meta: "textScore" }
-        }).sort({ score : { $meta : 'textScore' } }).exec(function(err, results){
+        gigsService.search(query, function(err, results){
             if(!results || results.length === 0) {
                 return messageService.send({
                     "channel": message.channel,
@@ -142,11 +139,7 @@ function registerTriggers(cb){
     // Return navigation links
     messageService.listenFor('navigate to', [], 'Find a gig (just like "find") and show a Google Maps link', function(message){
         var query = message.text.split('navigate to ')[1];
-        Gig.find({
-            $text: { $search: query }
-        },{
-            score: { $meta: "textScore" }
-        }).sort({ score : { $meta : 'textScore' } }).exec(function(err, results){
+        gigsService.search(query, function(err, results){
             if(!results || results.length === 0) {
                 return messageService.send({
                     "channel": message.channel,
