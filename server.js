@@ -14,6 +14,7 @@ moment.locale('nl_NL');
 // Lib
 var handlebarsHelpers = require('./lib/handlebarsHelpers');
 var passport = require('./lib/passport');
+var log = require('./lib/logging');
 
 // Services
 var messageService = require('./services/messages');
@@ -42,7 +43,10 @@ app.use(session({
         mongooseConnection: mongoose.connection
     },
     function(err){
-        console.log(err || 'connect-mongodb setup ok');
+        if(err) {
+            return log.error(err);
+        }
+        log.info('connect-mongodb setup ok');
     })
 }));
 app.use(passport.initialize());
@@ -65,7 +69,7 @@ app.get('/logout', function(req, res){
 // All routes below are authenticated
 app.use(function(req, res, next) {
     if(req.user === undefined) {
-        console.log('Not authenticated, redirecting to login');
+        log.verbose('Not authenticated, redirecting to login');
         req.session.redirect_to = req.url;
         res.redirect('/login');
     } else {
@@ -135,7 +139,7 @@ app.post('/gigs', function (req, res) {
     var gig = new Gig(data);
     gig.save(function(err){
         if(err) {
-            console.log(err);
+            log.error(err);
         }
         res.redirect('/gigs');
     });
@@ -143,11 +147,11 @@ app.post('/gigs', function (req, res) {
 app.post('/gigs/:id', function (req, res) {
     Gig.findOne({_id:req.params.id}, function(err, gig){
         if(err) {
-            console.error('Error updating gig '+req.params.id, err);
+            log.error('Error updating gig '+req.params.id, err);
             return res.sendStatus(500);
         }
         if(!gig) {
-            console.error('Can\t find gig to be updated '+req.params.id);
+            log.error('Can\t find gig to be updated '+req.params.id);
             return res.sendStatus(404);
         }
 
@@ -184,12 +188,12 @@ app.post('/gigs/:id', function (req, res) {
             gig.request.completed = null;
         }
 
-        console.log('Saving updated gig '+req.params.id);
-        console.dir(gig.toObject());
+        log.info('Saving updated gig '+req.params.id);
+        log.info(gig.toObject());
         gig.save(function(err){
             if(err) {
-                console.error('Error updating gig '+req.params.id, err);
-               return res.sendStatus(500);
+                log.error('Error updating gig '+req.params.id, err);
+                return res.sendStatus(500);
             }
 
             // Redirect
@@ -199,7 +203,7 @@ app.post('/gigs/:id', function (req, res) {
 });
 app.delete('/gigs/:id', function (req, res) {
     Gig.findOneAndRemove({_id:req.params.id}, function(err, gig){
-        console.log('Deleted gig id '+gig._id+' - '+_.get(gig,'venue.name'));
+        log.info('Deleted gig id '+gig._id+' - '+_.get(gig,'venue.name'));
         res.sendStatus(200);
     });
 });
@@ -232,7 +236,7 @@ module.exports.init = function(done) {
     var server_port = process.env.OPENSHIFT_NODEJS_PORT || 8080;
     var server_ip_address = process.env.OPENSHIFT_NODEJS_IP || '127.0.0.1';
     app.listen(server_port, server_ip_address, function () {
-        console.log( "Listening on " + server_ip_address + ", server_port " + server_port );
+        log.verbose( "Listening on " + server_ip_address + ", server_port " + server_port );
         return done();
     });
 };

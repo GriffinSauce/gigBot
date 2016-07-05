@@ -1,9 +1,10 @@
 
 var _ = require('lodash');
 var Settings = require('../schemas/settings.js');
+var log = require('../lib/logging');
 
 module.exports.updateSettings = function(postData, done) {
-    console.log('Updating settings with input: ', postData);
+    log.info('Updating settings with input: ', postData);
 
     // Rewrite links input
     var input = postData;

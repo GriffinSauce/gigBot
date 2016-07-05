@@ -16,6 +16,7 @@ var Gig = require('../schemas/gig.js');
 
 // global.gigbot.config
 var slack = require('../lib/slack');
+var log = require('../lib/logging');
 
 // Vars
 var token;
@@ -36,8 +37,8 @@ module.exports.init = function(done) {
         function startRTMSession(cb){
             needle.get("https://slack.com/api/rtm.start?token="+token, function(err, response){
                 if(err || !response.body.ok) {
-                    console.error('Starting RTM session failed', _.get(response,'body'));
-                    console.error(err);
+                    log.error('Starting RTM session failed', _.get(response,'body'));
+                    log.error(err);
                     return cb(err);
                 }
                 team = response.body;
@@ -50,7 +51,7 @@ module.exports.init = function(done) {
 
                 client.on('connectFailed', function(error) {
                     connectionLive = false;
-                    console.log('Connect Error: ' + error.toString());
+                    log.error('Connect Error: ' + error.toString());
                 });
 
                 client.on('connect', function(conn) {
@@ -63,11 +64,11 @@ module.exports.init = function(done) {
                     cb(null, team.users);
                     conn.on('error', function(error) {
                         connectionLive = false;
-                        console.log("Connection Error: " + error.toString());
+                        log.error("Connection Error: " + error.toString());
                     });
                     conn.on('close', function() {
                         connectionLive = false;
-                        console.log('echo-protocol Connection Closed');
+                        log.error('echo-protocol Connection Closed');
                     });
                     conn.on('message', handleMessage);
                 });
@@ -107,7 +108,7 @@ function listenFor(trigger, aliasses, description, callback) {
         regex: new RegExp(regexString, 'i'),
         callback: callback
     };
-    console.log('Registered', triggers[trigger].regex);
+    log.verbose('Registered', triggers[trigger].regex);
 }
 
 /* Send a message
@@ -133,18 +134,18 @@ function send(data, useHook) {
     }
 
     if(global.gigbot.config.logMessages.out) {
-        console.log("Sending:", data);
+        log.verbose("Sending:", data);
     }
 
     needle.post('https://slack.com/api/chat.postMessage', data, function(err, response){
         if(err || !_.get(response, 'body.ok')) {
-            console.log('Error posting message', {
+            log.error('Error posting message', {
                 message: data,
                 err: err,
                 body: _.get(response,'body')
             });
         }
-        console.log('Message posted');
+        log.info('Message posted', data);
     });
     return;
 }
@@ -158,9 +159,9 @@ function handleMessage(message) {
 
     // Log incoming msgs
     if(message.type === 'message' && global.gigbot.config.logMessages.in) {
-        console.log("Received:", message);
+        log.verbose("Received:", message);
     }else{
-        console.log("Received message from "+_.get(_.find(users, {id:message.user}),'name'));
+        log.verbose("Received message from "+_.get(_.find(users, {id:message.user}),'name'));
     }
 
     // Handle ims and skip the rest
@@ -182,7 +183,7 @@ function handleMessage(message) {
 
     // Slack says hello on connection start, run callback
     if(message.type === 'hello') {
-        console.log('Initialized message service');
+        log.verbose('Initialized message service');
         connectionLive = true;
         return;
     }
@@ -193,7 +194,7 @@ function handleMessage(message) {
         var messageHandled = false;
         _.each(triggers, function(trigger, triggerText){
             //if(message.text.indexOf(triggerText) !== -1) {
-            console.log(trigger.regex);
+            log.verbose(trigger.regex);
             if(message.text.match(trigger.regex)) {
                 messageHandled = true;
                 trigger.callback(message);
@@ -216,11 +217,11 @@ function handleMessage(message) {
 module.exports.askForAvailability = function(userName, gig){
     var user = _.find(users, {name: userName});
     if(!user) {
-        return console.error('Couldn\'t start avalability convo with'+userName);
+        return log.error('Couldn\'t start avalability convo with'+userName);
     }
     async.series([
         function(){
-            console.log('Started convo with', userName);
+            log.info('Started convo with', userName);
             var channel = _.find(imChannels, {user:user.id});
             send({
                 im: true,
@@ -249,7 +250,7 @@ module.exports.sendNeverMind = function(userName, gig){
 };
 
 function handleIm(message){
-    console.log('Handling IM', message);
+    log.info('Handling IM', message);
     var user = _.find(global.gigbot.settings.users, {
         id: message.user
     });
@@ -310,7 +311,7 @@ function handleIm(message){
         if(!_.find(gig.availability, { available:'unknown' })){
             gig.request.active = false;
             gig.request.completed = moment();
-            console.log('Request done!', gig.toObject());
+            log.info('Request done!', gig.toObject());
         }
 
         gig.save(function(){

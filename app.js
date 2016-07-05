@@ -1,4 +1,3 @@
-console.log('Starting gigBot');
 
 // Globals
 var config = require('./loadConfig');
@@ -25,7 +24,9 @@ var Gig = require('./schemas/gig.js');
 
 // Libs
 var slack = require('./lib/slack');
+var log = require('./lib/logging');
 
+log.verbose('Starting gigBot');
 async.waterfall([
     function connectDb(cb) {
         if(global.gigbot.config.env == 'local')
@@ -37,9 +38,11 @@ async.waterfall([
         }
 
         var db = mongoose.connection;
-        db.on('error', console.error.bind(console, 'connection error:'));
+        db.on('error', function(err) {
+            log.error('connection error', err);
+        });
         db.once('open', function callback() {
-            console.log('Connected to the database');
+            log.verbose('Connected to the database');
             cb();
         });
     },
@@ -72,6 +75,7 @@ async.waterfall([
     registerTriggers,
     server.init,
     function(cb) {
+        log.info('App started');
 
         // Write file for gulp to watch
         fs.writeFileSync('.rebooted', 'rebooted');
