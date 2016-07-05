@@ -193,14 +193,14 @@ function handleMessage(message) {
     if(message.type === 'message' && toGigbot) {
         var messageHandled = false;
         _.each(triggers, function(trigger, triggerText){
-            //if(message.text.indexOf(triggerText) !== -1) {
-            log.verbose(trigger.regex);
             if(message.text.match(trigger.regex)) {
+                log.verbose('Message matched', trigger.regex);
                 messageHandled = true;
                 trigger.callback(message);
             }
         });
         if(!messageHandled) {
+            log.warn('Message not handled')
             send({
                 "channel": message.channel,
                 "text": "Sorry I didn't understand, did you mean one of these?",
