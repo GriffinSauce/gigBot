@@ -109,7 +109,7 @@ function registerTriggers(cb){
 
     // Reply to any message containing "next gig"
     messageService.listenFor('next gig', ['volgende gig', 'volgend optreden'], 'Show the first upcoming gig', function(message){
-        Gig.find().sort({date: 1}).exec(function(err, gigs){
+        Gig.find({date: {$gte: new Date()}}).sort({date: 1}).exec(function(err, gigs){
             var nextGig = _.first(gigs);
             var text = "*Volgende gig:*\n";
             nextGig = slack.renderGigToSlackAttachment(nextGig);
