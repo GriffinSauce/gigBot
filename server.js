@@ -5,11 +5,13 @@ var express = require('express');
 var async = require('async');
 var exphbs  = require('express-handlebars');
 var session = require('express-session');
+var flash = require('connect-flash');
 var MongoStore = require('connect-mongo/es5')(session);
 var bodyParser = require('body-parser');
 var _ = require('lodash');
 var moment = require('moment');
 moment.locale('nl_NL');
+
 
 // Lib
 var handlebarsHelpers = require('./lib/handlebarsHelpers');
@@ -25,6 +27,21 @@ var gigsService = require('./services/gigs');
 var Gig = require('./schemas/gig.js');
 var Settings = require('./schemas/settings.js');
 
+// Bouncer setup
+var bouncer = require('express-bouncer')(500, 1000 * 60 * 20);
+//bouncer.whitelist.push('127.0.0.1');
+bouncer.blocked = function (req, res, next, remaining) {
+    var ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+
+    // Log and slack
+    log.info('*****************************');
+    log.info('Blocked request to ' + req.url + ' from: ' + ip);
+    log.info('req.body: ', req.body);
+    log.info('*****************************');
+
+    res.send(429, 'Too many requests have been made, please wait ' + (remaining / 1000) + ' seconds');
+};
+
 // UI for ... settings? status? Whatever, we'll figure it out
 var app = express();
 app.engine('handlebars', exphbs({ defaultLayout: 'main', helpers : handlebarsHelpers }));
@@ -34,6 +51,7 @@ app.set('view engine', 'handlebars');
 app.use(express.static('public'));
 
 // Middlewarez
+app.use(flash());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(session({
     secret:'secret',
@@ -51,12 +69,13 @@ app.use(session({
 }));
 app.use(passport.initialize());
 app.use(passport.session());
+app.use(require('express-request-response-logger')(log.info));
 
 // Auth routes
 app.get('/login', function (req, res) {
     res.render('login');
 });
-app.post('/login', passport.authenticate('local', {
+app.post('/login', bouncer.block, passport.authenticate('local', {
     successRedirect: '/gigs',
     failureRedirect: '/login',
     failureFlash: true

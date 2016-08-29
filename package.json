@@ -18,9 +18,12 @@
   "dependencies": {
     "async": "^2.0.0-rc.3",
     "body-parser": "^1.15.0",
+    "connect-flash": "^0.1.1",
     "connect-mongo": "^1.1.0",
     "express": "^4.13.4",
+    "express-bouncer": "^0.2.0",
     "express-handlebars": "^3.0.0",
+    "express-request-response-logger": "^1.0.0",
     "express-session": "^1.13.0",
     "full-text-search-light": "0.0.16",
     "google-spreadsheet": "^2.0.1",
