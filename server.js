@@ -112,6 +112,7 @@ app.get('/settings', function (req, res) {
     }, function(err, results){
         res.render('settings', {
             page: 'settings',
+            message: req.flash('settingsMessage'),
             settings: results.settings,
             gigs: results.gigs,
             triggers: messageService.triggers,
@@ -123,6 +124,15 @@ app.post('/settings', function (req, res) {
     settingsService.updateSettings(req.body, function(err){
         res.redirect('/settings');
     });
+});
+app.post('/settings/healthcheck', function (req, res) {
+    var status = messageService.sendHealthcheck();
+    if(status) {
+        req.flash('settingsMessage', 'Sent healthcheck message to slack');
+    } else {
+        req.flash('settingsMessage', 'FAILED to send healthcheck message');
+    }
+    res.redirect('/settings');
 });
 
 // Gigs admin

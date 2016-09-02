@@ -344,3 +344,14 @@ function parseAnswer(text){
     }
     return 'yes';
 }
+
+module.exports.sendHealthcheck = function() {
+    if(!connectionLive) {
+        return false;
+    }
+    send({
+        channel: devChannel.id,
+        text: 'HEALTHCHECK! Healthy as a horse! :horse:',
+    }, true);
+    return true;
+};
