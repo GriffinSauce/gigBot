@@ -28,6 +28,8 @@ var team = {};
 var users = {};
 var triggers = module.exports.triggers = {};
 var imChannels = [];
+var reconnectDelay = 0;
+var reconnectRetries = 0;
 
 // Initialise message service and bind listeners
 module.exports.init = function(done) {
@@ -41,7 +43,10 @@ function connectToSlackSocket(done) {
         if(err || !response.body.ok) {
             log.error('Starting RTM session failed', _.get(response,'body'));
             log.error(err);
-            return done(err);
+            if(done) {
+                done(err);
+            }
+            return;
         }
 
         // Save stuff to use all over the place
@@ -57,6 +62,7 @@ function connectToSlackSocket(done) {
         client.on('connectFailed', function(error) {
             connectionLive = false;
             log.error('Connect Error: ' + error.toString());
+            reconnect();
         });
 
         client.on('connect', function(connection) {
@@ -65,8 +71,14 @@ function connectToSlackSocket(done) {
                 text: "Bot online",
                 channel: devChannel.id
             });
+
+            // Whoo
             connectionLive = true;
-            done();
+            reconnectDelay = 0;
+            reconnectRetries = 0;
+            if(done) {
+                done();
+            }
         });
 
         // Try to connect
@@ -74,16 +86,50 @@ function connectToSlackSocket(done) {
     });
 }
 
+// Listen to events on the socket connection
 function bindWebsocketEvents(connection) {
     connection.on('message', handleMessage);
     connection.on('error', function(error) {
         connectionLive = false;
         log.error("Connection Error: " + error.toString());
+        reconnect();
     });
     connection.on('close', function() {
         connectionLive = false;
         log.error('echo-protocol Connection Closed');
+        reconnect();
     });
+}
+
+// Try to reconnect to the RTM API.
+function reconnect() {
+    if(connectionLive) {
+        log.info('I\'m sorry Dave, I\'m afraid I can\'t do that. The connection is live, not reconnecting');
+        return;
+    }
+    log.info('Reconnecting to slack RTM', {
+        reconnectDelay: reconnectDelay,
+        reconnectRetries: reconnectRetries,
+    });
+    send({
+        channel: devChannel.id,
+        text: 'Slack connection broke, reconnecting... (attempt '+ (reconnectRetries+1) +')'
+    });
+
+    // Give up after  5 times
+    if(reconnectDelay >= 5) {
+        log.error('Reconnect failed');
+        send({
+            channel: devChannel.id,
+            text: ':skull: Warning! Gigbot failed to connect to Slack, not listening to messages. :skull:',
+        });
+        return;
+    }
+
+    // Start with 500ms delay, extend with each retry
+    reconnectDelay = reconnectDelay ? reconnectDelay * 3 : 500;
+    reconnectRetries += 1;
+    setTimeout(connectToSlackSocket, reconnectDelay);
 }
 
 module.exports.isConnectionLive = function() {
@@ -116,7 +162,7 @@ function listenFor(trigger, aliasses, description, callback) {
  * }
  */
 module.exports.send = send;
-function send(data, useHook) {
+function send(data) {
     _.extend(data, {
         type: "message",
         token: token,
