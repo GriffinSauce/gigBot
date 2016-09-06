@@ -32,12 +32,19 @@ var imChannels = [];
 // Initialise message service and bind listeners
 module.exports.init = function(done) {
     token = _.get(global, 'gigbot.settings.slackToken');
+    connectToSlackSocket(done);
+};
+
+// Auth with slack and get an RTM websocket url
+function connectToSlackSocket(done) {
     needle.get("https://slack.com/api/rtm.start?token="+token, function(err, response){
         if(err || !response.body.ok) {
             log.error('Starting RTM session failed', _.get(response,'body'));
             log.error(err);
-            return cb(err);
+            return done(err);
         }
+
+        // Save stuff to use all over the place
         team = response.body;
         gigbot = team.self;
         devChannel = _.find(team.channels, {name: 'gigbot-dev'});
@@ -65,7 +72,7 @@ module.exports.init = function(done) {
         // Try to connect
         client.connect(response.body.url);
     });
-};
+}
 
 function bindWebsocketEvents(connection) {
     connection.on('message', handleMessage);
