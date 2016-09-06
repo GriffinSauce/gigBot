@@ -116,7 +116,7 @@ app.get('/settings', function (req, res) {
             settings: results.settings,
             gigs: results.gigs,
             triggers: messageService.triggers,
-            global: global.gigbot
+            slackConnected: messageService.isConnectionLive()
         });
     });
 });

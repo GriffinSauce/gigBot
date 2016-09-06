@@ -20,7 +20,6 @@ var log = require('../lib/logging');
 
 // Vars
 var token;
-var connection;
 var messageIndex = 0;
 var connectionLive = false;
 var gigbot;
@@ -33,68 +32,60 @@ var imChannels = [];
 // Initialise message service and bind listeners
 module.exports.init = function(done) {
     token = _.get(global, 'gigbot.settings.slackToken');
-    async.series([
-        function startRTMSession(cb){
-            needle.get("https://slack.com/api/rtm.start?token="+token, function(err, response){
-                if(err || !response.body.ok) {
-                    log.error('Starting RTM session failed', _.get(response,'body'));
-                    log.error(err);
-                    return cb(err);
-                }
-                team = response.body;
-                gigbot = team.self;
-                devChannel = _.find(team.channels, {name: 'gigbot-dev'});
-                users = team.users;
-
-                // Set up websocket client
-                var client = new WebSocketClient();
-
-                client.on('connectFailed', function(error) {
-                    connectionLive = false;
-                    log.error('Connect Error: ' + error.toString());
-                });
-
-                client.on('connect', function(conn) {
-                    connection = conn;
-                    connectionLive = true;
-                    send({
-                        text: "Bot online",
-                        channel: devChannel.id
-                    });
-                    cb(null, team.users);
-                    conn.on('error', function(error) {
-                        connectionLive = false;
-                        log.error("Connection Error: " + error.toString());
-                    });
-                    conn.on('close', function() {
-                        connectionLive = false;
-                        log.error('echo-protocol Connection Closed');
-                    });
-                    conn.on('message', handleMessage);
-                });
-
-                // Try to connect
-                client.connect(response.body.url);
-            });
-        },
-        function getImChannels(cb){
-            if(!_.isEmpty(imChannels)){
-                cb();
-            }
-            needle.get("https://slack.com/api/im.list?token="+token, function(err, response){
-                if(response.body.ok){
-                    imChannels = response.body.ims;
-                }
-                cb();
-            });
+    needle.get("https://slack.com/api/rtm.start?token="+token, function(err, response){
+        if(err || !response.body.ok) {
+            log.error('Starting RTM session failed', _.get(response,'body'));
+            log.error(err);
+            return cb(err);
         }
-    ], function(err, results){
-        if(!err) {
-            global.gigbot.slackConnected = true;
-        }
-        done(err, results && results[0]);
+        team = response.body;
+        gigbot = team.self;
+        devChannel = _.find(team.channels, {name: 'gigbot-dev'});
+        imChannels = team.ims;
+        users = team.users;
+
+        // Set up websocket client
+        var client = new WebSocketClient();
+
+        client.on('connectFailed', function(error) {
+            connectionLive = false;
+            log.error('Connect Error: ' + error.toString());
+        });
+
+        client.on('connect', function(connection) {
+            bindWebsocketEvents(connection);
+            send({
+                text: "Bot online",
+                channel: devChannel.id
+            });
+            connectionLive = true;
+            done();
+        });
+
+        // Try to connect
+        client.connect(response.body.url);
     });
 };
+
+function bindWebsocketEvents(connection) {
+    connection.on('message', handleMessage);
+    connection.on('error', function(error) {
+        connectionLive = false;
+        log.error("Connection Error: " + error.toString());
+    });
+    connection.on('close', function() {
+        connectionLive = false;
+        log.error('echo-protocol Connection Closed');
+    });
+}
+
+module.exports.isConnectionLive = function() {
+    return connectionLive;
+}
+
+module.exports.getUsers = function() {
+    return users;
+}
 
 // Allow for triggers to be added
 module.exports.listenFor = listenFor;
@@ -184,7 +175,6 @@ function handleMessage(message) {
     // Slack says hello on connection start, run callback
     if(message.type === 'hello') {
         log.verbose('Initialized message service');
-        connectionLive = true;
         return;
     }
 

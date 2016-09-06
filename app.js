@@ -53,11 +53,12 @@ async.waterfall([
         });
     },
     function initializeMessages(cb){
-        messageService.init(function(err, slackUsers){
+        messageService.init(function(err){
+            var slackUsers = messageService.getUsers();
             slackUsers = _.reject(slackUsers, { id:'USLACKBOT' });
             slackUsers = _.reject(slackUsers, { name:'gigbot' });
             slackUsers = _.map(slackUsers, _.partialRight(_.omit, 'presence', 'is_admin', 'is_owner', 'is_primary_owner', 'is_restricted', 'is_ultra_restricted', 'is_bot'));
-            cb(null, slackUsers);
+            cb(err, slackUsers);
         });
     },
     function updateUsers(slackUsers, cb){
