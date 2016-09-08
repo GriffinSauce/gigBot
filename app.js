@@ -40,6 +40,7 @@ async.waterfall([
         var db = mongoose.connection;
         db.on('error', function(err) {
             log.error('connection error', err);
+            cb(err);
         });
         db.once('open', function callback() {
             log.verbose('Connected to the database');
@@ -49,7 +50,7 @@ async.waterfall([
     function getSettings(cb){
         Settings.findOne({}, function(err, settings){
             global.gigbot.settings = settings.toObject();
-            return cb();
+            return cb(err);
         });
     },
     function initializeMessages(cb){
@@ -74,15 +75,17 @@ async.waterfall([
         });
     },
     registerTriggers,
-    server.init,
-    function(cb) {
-        log.info('App started');
-
-        // Write file for gulp to watch
-        fs.writeFileSync('.rebooted', 'rebooted');
-        cb();
+    server.init
+], function(err) {
+    if(err) {
+        log.error('Startup error, dying', err);
+        return process.exit(1);
     }
-]);
+    log.info('App started');
+
+    // Write file for gulp to watch
+    fs.writeFileSync('.rebooted', 'rebooted');
+});
 
 function registerTriggers(cb){
 
@@ -96,7 +99,7 @@ function registerTriggers(cb){
 
     // Reply to any message containing "list gigs"
     messageService.listenFor('list gigs', ['lijst', 'alle optredens', 'alle gigs'], 'List all gigs', function(message){
-        Gig.find().sort({date:1}).exec(function(err, gigs){
+        Gig.find().sort({date:-1}).exec(function(err, gigs){
             var text = "*Alle gigs:*\n";
             gigs = _.map(gigs, slack.renderGigToSlackAttachment);
             messageService.send({

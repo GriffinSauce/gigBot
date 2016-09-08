@@ -17,7 +17,7 @@ module.exports.getAll = function(done) {
             Settings.findOne(cb);
         },
         gigs: function(cb) {
-            Gig.find().sort({date:1}).exec(cb);
+            Gig.find().sort({date:-1}).exec(cb);
         },
         activeRequests: function(cb) {
             Gig.find({'request.active': true}, cb);
