@@ -98,7 +98,20 @@ function registerTriggers(cb){
     });
 
     // Reply to any message containing "list gigs"
-    messageService.listenFor('list gigs', ['lijst', 'alle optredens', 'alle gigs'], 'List all gigs', function(message){
+    messageService.listenFor('list gigs', ['future gigs', 'lijst', 'opkomende optredens'], 'List future gigs', function(message){
+        Gig.find({date: {$gte: new Date()}}).sort({date:-1}).exec(function(err, gigs){
+            var text = "*Alle toekomstige gigs:*\n";
+            gigs = _.map(gigs, slack.renderGigToSlackAttachment);
+            messageService.send({
+                "channel": message.channel,
+                "text": text,
+                "attachments": JSON.stringify(gigs)
+            }, true);
+        });
+    });
+
+    // Reply to any message containing "list gigs"
+    messageService.listenFor('all gigs', ['alle optredens', 'alle gigs'], 'List all gigs', function(message){
         Gig.find().sort({date:-1}).exec(function(err, gigs){
             var text = "*Alle gigs:*\n";
             gigs = _.map(gigs, slack.renderGigToSlackAttachment);
