@@ -96,6 +96,19 @@ function registerTriggers(cb){
         });
     });
 
+    // Reply to "help" with registered commands
+    messageService.listenFor('help', [], 'Will show all my commands', function(message){
+        messageService.send({
+            "channel": message.channel,
+            "text": "How can I help you?",
+            "attachments": JSON.stringify([{
+                "color": "#36a64f",
+                "fields": slack.keysToAttachments(triggers),
+                "mrkdwn_in": ["text", "fields"]
+            }])
+        }, true);
+    });
+
     // Reply to any message containing "list gigs"
     messageService.listenFor('list gigs', ['future gigs', 'lijst', 'opkomende optredens'], 'List future gigs', function(message){
         Gig.find({date: {$gte: new Date()}}).sort({date:-1}).exec(function(err, gigs){
