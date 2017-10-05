@@ -4,7 +4,6 @@ var config = require('./loadConfig');
 global.gigbot = {
     settings: {},
     config: config,
-    ipaddress: process.env.OPENSHIFT_NODEJS_IP || "127.0.0.1"
 };
 
 // Modules
@@ -31,7 +30,7 @@ async.waterfall([
     function connectDb(cb) {
         if(global.gigbot.config.env == 'local')
         {
-            mongoose.connect('mongodb://' + global.gigbot.ipaddress + '/gigbot');
+            mongoose.connect('mongodb://127.0.0.1/gigbot');
         } else
         {
             mongoose.connect(process.env.MONGODB_URL + 'gigbot', { db: { nativeParser: true } });
