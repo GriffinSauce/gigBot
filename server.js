@@ -263,9 +263,8 @@ app.delete('/gigs/:id/request/cancel', function (req, res) {
 
 module.exports.init = function(done) {
     var server_port = process.env.PORT || 8080;
-    var server_ip_address = process.env.IP || '127.0.0.1';
-    app.listen(server_port, server_ip_address, function () {
-        log.verbose( "Listening on " + server_ip_address + ", server_port " + server_port );
+    app.listen(server_port, function () {
+        log.verbose( "Listening on port " + server_port );
         return done();
     });
 };
