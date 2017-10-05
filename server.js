@@ -5,15 +5,18 @@ var express = require('express');
 var async = require('async');
 var exphbs  = require('express-handlebars');
 var session = require('express-session');
+var flash = require('connect-flash');
 var MongoStore = require('connect-mongo/es5')(session);
 var bodyParser = require('body-parser');
 var _ = require('lodash');
 var moment = require('moment');
 moment.locale('nl_NL');
 
+
 // Lib
 var handlebarsHelpers = require('./lib/handlebarsHelpers');
 var passport = require('./lib/passport');
+var log = require('./lib/logging');
 
 // Services
 var messageService = require('./services/messages');
@@ -24,6 +27,21 @@ var gigsService = require('./services/gigs');
 var Gig = require('./schemas/gig.js');
 var Settings = require('./schemas/settings.js');
 
+// Bouncer setup
+var bouncer = require('express-bouncer')(500, 1000 * 60 * 20);
+//bouncer.whitelist.push('127.0.0.1');
+bouncer.blocked = function (req, res, next, remaining) {
+    var ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+
+    // Log and slack
+    log.info('*****************************');
+    log.info('Blocked request to ' + req.url + ' from: ' + ip);
+    log.info('req.body: ', req.body);
+    log.info('*****************************');
+
+    res.send(429, 'Too many requests have been made, please wait ' + (remaining / 1000) + ' seconds');
+};
+
 // UI for ... settings? status? Whatever, we'll figure it out
 var app = express();
 app.engine('handlebars', exphbs({ defaultLayout: 'main', helpers : handlebarsHelpers }));
@@ -33,6 +51,7 @@ app.set('view engine', 'handlebars');
 app.use(express.static('public'));
 
 // Middlewarez
+app.use(flash());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(session({
     secret:'secret',
@@ -42,17 +61,21 @@ app.use(session({
         mongooseConnection: mongoose.connection
     },
     function(err){
-        console.log(err || 'connect-mongodb setup ok');
+        if(err) {
+            return log.error(err);
+        }
+        log.info('connect-mongodb setup ok');
     })
 }));
 app.use(passport.initialize());
 app.use(passport.session());
+app.use(require('express-request-response-logger')(log.info));
 
 // Auth routes
 app.get('/login', function (req, res) {
     res.render('login');
 });
-app.post('/login', passport.authenticate('local', {
+app.post('/login', bouncer.block, passport.authenticate('local', {
     successRedirect: '/gigs',
     failureRedirect: '/login',
     failureFlash: true
@@ -65,7 +88,7 @@ app.get('/logout', function(req, res){
 // All routes below are authenticated
 app.use(function(req, res, next) {
     if(req.user === undefined) {
-        console.log('Not authenticated, redirecting to login');
+        log.verbose('Not authenticated, redirecting to login');
         req.session.redirect_to = req.url;
         res.redirect('/login');
     } else {
@@ -89,10 +112,11 @@ app.get('/settings', function (req, res) {
     }, function(err, results){
         res.render('settings', {
             page: 'settings',
+            message: req.flash('settingsMessage'),
             settings: results.settings,
             gigs: results.gigs,
             triggers: messageService.triggers,
-            global: global.gigbot
+            slackConnected: messageService.isConnectionLive()
         });
     });
 });
@@ -100,6 +124,15 @@ app.post('/settings', function (req, res) {
     settingsService.updateSettings(req.body, function(err){
         res.redirect('/settings');
     });
+});
+app.post('/settings/healthcheck', function (req, res) {
+    var status = messageService.sendHealthcheck();
+    if(status) {
+        req.flash('settingsMessage', 'Sent healthcheck message to slack');
+    } else {
+        req.flash('settingsMessage', 'FAILED to send healthcheck message');
+    }
+    res.redirect('/settings');
 });
 
 // Gigs admin
@@ -135,7 +168,7 @@ app.post('/gigs', function (req, res) {
     var gig = new Gig(data);
     gig.save(function(err){
         if(err) {
-            console.log(err);
+            log.error(err);
         }
         res.redirect('/gigs');
     });
@@ -143,11 +176,11 @@ app.post('/gigs', function (req, res) {
 app.post('/gigs/:id', function (req, res) {
     Gig.findOne({_id:req.params.id}, function(err, gig){
         if(err) {
-            console.error('Error updating gig '+req.params.id, err);
+            log.error('Error updating gig '+req.params.id, err);
             return res.sendStatus(500);
         }
         if(!gig) {
-            console.error('Can\t find gig to be updated '+req.params.id);
+            log.error('Can\t find gig to be updated '+req.params.id);
             return res.sendStatus(404);
         }
 
@@ -184,12 +217,12 @@ app.post('/gigs/:id', function (req, res) {
             gig.request.completed = null;
         }
 
-        console.log('Saving updated gig '+req.params.id);
-        console.dir(gig.toObject());
+        log.info('Saving updated gig '+req.params.id);
+        log.info(gig.toObject());
         gig.save(function(err){
             if(err) {
-                console.error('Error updating gig '+req.params.id, err);
-               return res.sendStatus(500);
+                log.error('Error updating gig '+req.params.id, err);
+                return res.sendStatus(500);
             }
 
             // Redirect
@@ -199,7 +232,7 @@ app.post('/gigs/:id', function (req, res) {
 });
 app.delete('/gigs/:id', function (req, res) {
     Gig.findOneAndRemove({_id:req.params.id}, function(err, gig){
-        console.log('Deleted gig id '+gig._id+' - '+_.get(gig,'venue.name'));
+        log.info('Deleted gig id '+gig._id+' - '+_.get(gig,'venue.name'));
         res.sendStatus(200);
     });
 });
@@ -232,7 +265,7 @@ module.exports.init = function(done) {
     var server_port = process.env.OPENSHIFT_NODEJS_PORT || 8080;
     var server_ip_address = process.env.OPENSHIFT_NODEJS_IP || '127.0.0.1';
     app.listen(server_port, server_ip_address, function () {
-        console.log( "Listening on " + server_ip_address + ", server_port " + server_port );
+        log.verbose( "Listening on " + server_ip_address + ", server_port " + server_port );
         return done();
     });
 };

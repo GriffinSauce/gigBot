@@ -1,4 +1,3 @@
-console.log('Starting gigBot');
 
 // Globals
 var config = require('./loadConfig');
@@ -25,7 +24,9 @@ var Gig = require('./schemas/gig.js');
 
 // Libs
 var slack = require('./lib/slack');
+var log = require('./lib/logging');
 
+log.verbose('Starting gigBot');
 async.waterfall([
     function connectDb(cb) {
         if(global.gigbot.config.env == 'local')
@@ -37,24 +38,28 @@ async.waterfall([
         }
 
         var db = mongoose.connection;
-        db.on('error', console.error.bind(console, 'connection error:'));
+        db.on('error', function(err) {
+            log.error('connection error', err);
+            cb(err);
+        });
         db.once('open', function callback() {
-            console.log('Connected to the database');
+            log.verbose('Connected to the database');
             cb();
         });
     },
     function getSettings(cb){
         Settings.findOne({}, function(err, settings){
             global.gigbot.settings = settings.toObject();
-            return cb();
+            return cb(err);
         });
     },
     function initializeMessages(cb){
-        messageService.init(function(err, slackUsers){
+        messageService.init(function(err){
+            var slackUsers = messageService.getUsers();
             slackUsers = _.reject(slackUsers, { id:'USLACKBOT' });
             slackUsers = _.reject(slackUsers, { name:'gigbot' });
             slackUsers = _.map(slackUsers, _.partialRight(_.omit, 'presence', 'is_admin', 'is_owner', 'is_primary_owner', 'is_restricted', 'is_ultra_restricted', 'is_bot'));
-            cb(null, slackUsers);
+            cb(err, slackUsers);
         });
     },
     function updateUsers(slackUsers, cb){
@@ -70,14 +75,17 @@ async.waterfall([
         });
     },
     registerTriggers,
-    server.init,
-    function(cb) {
-
-        // Write file for gulp to watch
-        fs.writeFileSync('.rebooted', 'rebooted');
-        cb();
+    server.init
+], function(err) {
+    if(err) {
+        log.error('Startup error, dying', err);
+        return process.exit(1);
     }
-]);
+    log.info('App started');
+
+    // Write file for gulp to watch
+    fs.writeFileSync('.rebooted', 'rebooted');
+});
 
 function registerTriggers(cb){
 
@@ -90,8 +98,21 @@ function registerTriggers(cb){
     });
 
     // Reply to any message containing "list gigs"
-    messageService.listenFor('list gigs', ['lijst', 'alle optredens', 'alle gigs'], 'List all gigs', function(message){
-        Gig.find().sort({date:1}).exec(function(err, gigs){
+    messageService.listenFor('list gigs', ['future gigs', 'lijst', 'opkomende optredens'], 'List future gigs', function(message){
+        Gig.find({date: {$gte: new Date()}}).sort({date:-1}).exec(function(err, gigs){
+            var text = "*Alle toekomstige gigs:*\n";
+            gigs = _.map(gigs, slack.renderGigToSlackAttachment);
+            messageService.send({
+                "channel": message.channel,
+                "text": text,
+                "attachments": JSON.stringify(gigs)
+            }, true);
+        });
+    });
+
+    // Reply to any message containing "list gigs"
+    messageService.listenFor('all gigs', ['alle optredens', 'alle gigs'], 'List all gigs', function(message){
+        Gig.find().sort({date:-1}).exec(function(err, gigs){
             var text = "*Alle gigs:*\n";
             gigs = _.map(gigs, slack.renderGigToSlackAttachment);
             messageService.send({
@@ -105,7 +126,7 @@ function registerTriggers(cb){
 
     // Reply to any message containing "next gig"
     messageService.listenFor('next gig', ['volgende gig', 'volgend optreden'], 'Show the first upcoming gig', function(message){
-        Gig.find().sort({date: 1}).exec(function(err, gigs){
+        Gig.find({date: {$gte: new Date()}}).sort({date: 1}).exec(function(err, gigs){
             var nextGig = _.first(gigs);
             var text = "*Volgende gig:*\n";
             nextGig = slack.renderGigToSlackAttachment(nextGig);

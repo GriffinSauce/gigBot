@@ -18,10 +18,14 @@
   "dependencies": {
     "async": "^2.0.0-rc.3",
     "body-parser": "^1.15.0",
+    "connect-flash": "^0.1.1",
     "connect-mongo": "^1.1.0",
     "express": "^4.13.4",
+    "express-bouncer": "^0.2.0",
     "express-handlebars": "^3.0.0",
+    "express-request-response-logger": "^1.0.0",
     "express-session": "^1.13.0",
+    "le_node": "^1.3.1",
     "lodash": "^4.11.1",
     "moment": "^2.13.0",
     "moment-timezone": "^0.5.3",
@@ -29,7 +33,8 @@
     "needle": "^1.0.0",
     "passport": "^0.3.2",
     "passport-local": "^1.0.0",
-    "websocket": "^1.0.22"
+    "websocket": "^1.0.22",
+    "winston": "^2.2.0"
   },
   "devDependencies": {
     "browser-sync": "^2.12.5",

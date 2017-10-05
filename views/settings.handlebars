@@ -1,5 +1,9 @@
 {{> header}}
 
+{{#if message}}
+<div class="alert alert-info" role="alert">{{message}}</div>
+{{/if}}
+
 <div class="container">
     <div class="row">
         <div class="col-md-12">
@@ -80,11 +84,20 @@
         <div class="col-md-6">
             <div class="panel">
                 <div class="panel-body">
-                    <div>Slack status: {{#if global.slackConnected}}<span class="label label-success">connected</span>{{else}}<span class="label label-danger">not connected!</span>{{/if}}</div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div>Slack status: {{#if slackConnected}}<span class="label label-success">connected</span>{{else}}<span class="label label-danger">not connected!</span>{{/if}}</div>
 
-                    {{#if gigs}}
-                    <div>Loaded {{gigs.length}} gigs</div>
-                    {{/if}}
+                            {{#if gigs}}
+                            <div>Loaded {{gigs.length}} gigs</div>
+                            {{/if}}
+                        </div>
+                        <div class="col-md-12">
+                            <form class="form" action="/settings/healthcheck" method="post">
+                                <input class="btn btn-primary" type="submit" value="Healthcheck" />
+                            </form>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

@@ -1,4 +1,7 @@
+var _ = require('lodash');
 var config = require('./config.json');
+var secrets = require('./secrets.json');
+_.merge(config, secrets);
 
 config.env = process.env.NODE_ENV;
 config.env = config.env === 'production' ? 'prod' : config.env;

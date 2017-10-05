@@ -16,10 +16,10 @@ var Gig = require('../schemas/gig.js');
 
 // global.gigbot.config
 var slack = require('../lib/slack');
+var log = require('../lib/logging');
 
 // Vars
 var token;
-var connection;
 var messageIndex = 0;
 var connectionLive = false;
 var gigbot;
@@ -28,72 +28,117 @@ var team = {};
 var users = {};
 var triggers = module.exports.triggers = {};
 var imChannels = [];
+var reconnectDelay = 0;
+var reconnectRetries = 0;
 
 // Initialise message service and bind listeners
 module.exports.init = function(done) {
     token = _.get(global, 'gigbot.settings.slackToken');
-    async.series([
-        function startRTMSession(cb){
-            needle.get("https://slack.com/api/rtm.start?token="+token, function(err, response){
-                if(err || !response.body.ok) {
-                    console.error('Starting RTM session failed', _.get(response,'body'));
-                    console.error(err);
-                    return cb(err);
-                }
-                team = response.body;
-                gigbot = team.self;
-                devChannel = _.find(team.channels, {name: 'gigbot-dev'});
-                users = team.users;
-
-                // Set up websocket client
-                var client = new WebSocketClient();
-
-                client.on('connectFailed', function(error) {
-                    connectionLive = false;
-                    console.log('Connect Error: ' + error.toString());
-                });
-
-                client.on('connect', function(conn) {
-                    connection = conn;
-                    connectionLive = true;
-                    send({
-                        text: "Bot online",
-                        channel: devChannel.id
-                    });
-                    cb(null, team.users);
-                    conn.on('error', function(error) {
-                        connectionLive = false;
-                        console.log("Connection Error: " + error.toString());
-                    });
-                    conn.on('close', function() {
-                        connectionLive = false;
-                        console.log('echo-protocol Connection Closed');
-                    });
-                    conn.on('message', handleMessage);
-                });
-
-                // Try to connect
-                client.connect(response.body.url);
-            });
-        },
-        function getImChannels(cb){
-            if(!_.isEmpty(imChannels)){
-                cb();
-            }
-            needle.get("https://slack.com/api/im.list?token="+token, function(err, response){
-                if(response.body.ok){
-                    imChannels = response.body.ims;
-                }
-                cb();
-            });
-        }
-    ], function(err, results){
-        if(!err) {
-            global.gigbot.slackConnected = true;
-        }
-        done(err, results && results[0]);
-    });
+    connectToSlackSocket(done);
 };
+
+// Auth with slack and get an RTM websocket url
+function connectToSlackSocket(done) {
+    needle.get("https://slack.com/api/rtm.start?token="+token, function(err, response){
+        if(err || !response.body.ok) {
+            log.error('Starting RTM session failed', _.get(response,'body'));
+            log.error(err);
+            if(done) {
+                done(err);
+            }
+            return;
+        }
+
+        // Save stuff to use all over the place
+        team = response.body;
+        gigbot = team.self;
+        devChannel = _.find(team.channels, {name: 'gigbot-dev'});
+        imChannels = team.ims;
+        users = team.users;
+
+        // Set up websocket client
+        var client = new WebSocketClient();
+
+        client.on('connectFailed', function(error) {
+            connectionLive = false;
+            log.error('Connect Error: ' + error.toString());
+            reconnect();
+        });
+
+        client.on('connect', function(connection) {
+            bindWebsocketEvents(connection);
+            send({
+                text: "Bot online",
+                channel: devChannel.id
+            });
+
+            // Whoo
+            connectionLive = true;
+            reconnectDelay = 0;
+            reconnectRetries = 0;
+            if(done) {
+                done();
+            }
+        });
+
+        // Try to connect
+        client.connect(response.body.url);
+    });
+}
+
+// Listen to events on the socket connection
+function bindWebsocketEvents(connection) {
+    connection.on('message', handleMessage);
+    connection.on('error', function(error) {
+        connectionLive = false;
+        log.error("Connection Error: " + error.toString());
+        reconnect();
+    });
+    connection.on('close', function() {
+        connectionLive = false;
+        log.error('echo-protocol Connection Closed');
+        reconnect();
+    });
+}
+
+// Try to reconnect to the RTM API.
+function reconnect() {
+    if(connectionLive) {
+        log.info('I\'m sorry Dave, I\'m afraid I can\'t do that. The connection is live, not reconnecting');
+        return;
+    }
+    log.info('Reconnecting to slack RTM', {
+        reconnectDelay: reconnectDelay,
+        reconnectRetries: reconnectRetries,
+    });
+    send({
+        channel: devChannel.id,
+        text: 'Slack connection broke, reconnecting... (attempt '+ (reconnectRetries+1) +')'
+    });
+
+    // Give up after  5 times
+    if(reconnectDelay >= 5) {
+        log.error('Reconnect failed');
+        send({
+            channel: devChannel.id,
+            text: ':skull: Warning! Gigbot failed to connect to Slack, not listening to messages. :skull:',
+        });
+        return;
+    }
+
+    // Start with 500ms delay, extend with each retry
+    reconnectDelay = reconnectDelay ? reconnectDelay * 3 : 500;
+    reconnectRetries += 1;
+    setTimeout(connectToSlackSocket, reconnectDelay);
+}
+
+module.exports.isConnectionLive = function() {
+    return connectionLive;
+}
+
+module.exports.getUsers = function() {
+    return users;
+}
 
 // Allow for triggers to be added
 module.exports.listenFor = listenFor;
@@ -107,7 +152,7 @@ function listenFor(trigger, aliasses, description, callback) {
         regex: new RegExp(regexString, 'i'),
         callback: callback
     };
-    console.log('Registered', triggers[trigger].regex);
+    log.verbose('Registered', triggers[trigger].regex);
 }
 
 /* Send a message
@@ -117,7 +162,7 @@ function listenFor(trigger, aliasses, description, callback) {
  * }
  */
 module.exports.send = send;
-function send(data, useHook) {
+function send(data) {
     _.extend(data, {
         type: "message",
         token: token,
@@ -133,18 +178,18 @@ function send(data, useHook) {
     }
 
     if(global.gigbot.config.logMessages.out) {
-        console.log("Sending:", data);
+        log.verbose("Sending:", data);
     }
 
     needle.post('https://slack.com/api/chat.postMessage', data, function(err, response){
         if(err || !_.get(response, 'body.ok')) {
-            console.log('Error posting message', {
+            log.error('Error posting message', {
                 message: data,
                 err: err,
                 body: _.get(response,'body')
             });
         }
-        console.log('Message posted');
+        log.info('Message posted', data);
     });
     return;
 }
@@ -158,9 +203,9 @@ function handleMessage(message) {
 
     // Log incoming msgs
     if(message.type === 'message' && global.gigbot.config.logMessages.in) {
-        console.log("Received:", message);
+        log.verbose("Received:", message);
     }else{
-        console.log("Received message from "+_.get(_.find(users, {id:message.user}),'name'));
+        log.verbose("Received message from "+_.get(_.find(users, {id:message.user}),'name'));
     }
 
     // Handle ims and skip the rest
@@ -182,24 +227,23 @@ function handleMessage(message) {
 
     // Slack says hello on connection start, run callback
     if(message.type === 'hello') {
-        console.log('Initialized message service');
-        connectionLive = true;
+        log.verbose('Initialized message service');
         return;
     }
 
     // Listen for triggers and call callback when found
-    var toGigbot = message.text && message.text.match(new RegExp('<@'+gigbot.id+'>|'+gigbot.name, 'i'));
+    var toGigbot = message.text && message.text.match(new RegExp('<@'+gigbot.id+'>', 'i'));
     if(message.type === 'message' && toGigbot) {
         var messageHandled = false;
         _.each(triggers, function(trigger, triggerText){
-            //if(message.text.indexOf(triggerText) !== -1) {
-            console.log(trigger.regex);
             if(message.text.match(trigger.regex)) {
+                log.verbose('Message matched', trigger.regex);
                 messageHandled = true;
                 trigger.callback(message);
             }
         });
         if(!messageHandled) {
+            log.warn('Message not handled')
             send({
                 "channel": message.channel,
                 "text": "Sorry I didn't understand, did you mean one of these?",
@@ -216,11 +260,11 @@ function handleMessage(message) {
 module.exports.askForAvailability = function(userName, gig){
     var user = _.find(users, {name: userName});
     if(!user) {
-        return console.error('Couldn\'t start avalability convo with'+userName);
+        return log.error('Couldn\'t start avalability convo with'+userName);
     }
     async.series([
         function(){
-            console.log('Started convo with', userName);
+            log.info('Started convo with', userName);
             var channel = _.find(imChannels, {user:user.id});
             send({
                 im: true,
@@ -249,7 +293,7 @@ module.exports.sendNeverMind = function(userName, gig){
 };
 
 function handleIm(message){
-    console.log('Handling IM', message);
+    log.info('Handling IM', message);
     var user = _.find(global.gigbot.settings.users, {
         id: message.user
     });
@@ -310,7 +354,7 @@ function handleIm(message){
         if(!_.find(gig.availability, { available:'unknown' })){
             gig.request.active = false;
             gig.request.completed = moment();
-            console.log('Request done!', gig.toObject());
+            log.info('Request done!', gig.toObject());
         }
 
         gig.save(function(){
@@ -343,3 +387,14 @@ function parseAnswer(text){
     }
     return 'yes';
 }
+
+module.exports.sendHealthcheck = function() {
+    if(!connectionLive) {
+        return false;
+    }
+    send({
+        channel: devChannel.id,
+        text: 'HEALTHCHECK! Healthy as a horse! :horse:',
+    }, true);
+    return true;
+};
