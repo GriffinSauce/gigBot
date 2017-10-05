@@ -262,8 +262,8 @@ app.delete('/gigs/:id/request/cancel', function (req, res) {
 });
 
 module.exports.init = function(done) {
-    var server_port = process.env.OPENSHIFT_NODEJS_PORT || 8080;
-    var server_ip_address = process.env.OPENSHIFT_NODEJS_IP || '127.0.0.1';
+    var server_port = process.env.PORT || 8080;
+    var server_ip_address = process.env.IP || '127.0.0.1';
     app.listen(server_port, server_ip_address, function () {
         log.verbose( "Listening on " + server_ip_address + ", server_port " + server_port );
         return done();

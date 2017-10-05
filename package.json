@@ -1,6 +1,6 @@
 {
   "name": "gigBot",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "GigBot, a bot for gigs",
   "main": "app.js",
   "repository": {
@@ -8,7 +8,7 @@
     "url": "git://github.com/GriffinSauce/gigBot.git"
   },
   "engine": {
-    "node": "*",
+    "node": "8.6.0",
     "npm": "*"
   },
   "scripts": {

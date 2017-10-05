@@ -32,7 +32,7 @@ var options = {
     server: {
         path: './app',
         env: {
-            OPENSHIFT_NODEJS_PORT: 3200,
+            PORT: 3200,
             NODE_ENV: 'local',
         }
     }
