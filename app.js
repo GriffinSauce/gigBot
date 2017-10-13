@@ -10,7 +10,7 @@ global.gigbot = {
 var _ = require("lodash");
 var async = require("async");
 var fs = require('fs');
-var mongoose = require('mongoose');
+var mongoose = require('./lib/mongoose');
 
 // Server and services
 var server = require('./server');
@@ -27,25 +27,6 @@ var log = require('./lib/logging');
 
 log.verbose('Starting gigBot');
 async.waterfall([
-    function connectDb(cb) {
-        if(global.gigbot.config.env == 'local')
-        {
-            mongoose.connect('mongodb://127.0.0.1/gigbot');
-        } else
-        {
-            mongoose.connect(process.env.MONGODB_URL + 'gigbot', { db: { nativeParser: true } });
-        }
-
-        var db = mongoose.connection;
-        db.on('error', function(err) {
-            log.error('connection error', err);
-            cb(err);
-        });
-        db.once('open', function callback() {
-            log.verbose('Connected to the database');
-            cb();
-        });
-    },
     function getSettings(cb){
         Settings.findOne({}, function(err, settings){
             global.gigbot.settings = settings.toObject();

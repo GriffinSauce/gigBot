@@ -1,6 +1,6 @@
 /*globals require, module */
 
-var mongoose = require('mongoose');
+var mongoose = require('../lib/mongoose');
 var moment = require('moment');
 var Schema = mongoose.Schema;
 var schema = new Schema(

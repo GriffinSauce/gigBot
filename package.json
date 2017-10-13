@@ -14,8 +14,7 @@
   "scripts": {
     "start": "node ./app.js",
     "test": "cross-env NODE_ENV=test mocha --compilers js:babel-core/register ./**/*.spec.js",
-    "tdd": "cross-env NODE_ENV=test mocha --compilers js:babel-core/register ./**/*.spec.js --watch",
-    "tdd2": "find . -name node_modules -prune -o -name '*.spec.js' | cross-env NODE_ENV=test mocha --watch -R list"
+    "tdd": "cross-env NODE_ENV=test mocha --compilers js:babel-core/register ./**/*.spec.js --watch"
   },
   "author": "Joris Griffioen <jorisjgriffioen@gmail.com>",
   "dependencies": {
