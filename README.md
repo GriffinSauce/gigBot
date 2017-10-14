@@ -1,4 +1,4 @@
-[![wercker status](https://app.wercker.com/status/25206e42d05e6a3047e69af95d459d58/m "wercker status")](https://app.wercker.com/project/bykey/25206e42d05e6a3047e69af95d459d58)
+[ ![Codeship Status for GriffinSauce/gigBot](https://app.codeship.com/projects/07622b00-0234-0134-b96b-5a840fcbac76/status?branch=master)](https://app.codeship.com/projects/153576)
 
 # gigBot
 
