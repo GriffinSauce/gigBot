@@ -13,7 +13,7 @@
   },
   "scripts": {
     "start": "node ./app.js",
-    "test": "cross-env NODE_ENV=test mocha --compilers js:babel-core/register ./**/*.spec.js",
+    "test": "cross-env NODE_ENV=test mocha --compilers js:babel-core/register ./**/*.spec.js --exit",
     "tdd": "cross-env NODE_ENV=test mocha --compilers js:babel-core/register ./**/*.spec.js --watch"
   },
   "author": "Joris Griffioen <jorisjgriffioen@gmail.com>",
