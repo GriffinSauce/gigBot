@@ -3,3 +3,7 @@
 # gigBot
 
 A slackbot for gigs, very much under-construction...
+
+---
+Archived, this project has been superceded by [noise.cat](https://github.com/GriffinSauce/noise.cat)
+---
